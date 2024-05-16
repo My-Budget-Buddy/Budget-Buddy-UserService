@@ -13,7 +13,6 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import com.skillstorm.user_service.services.MyUserDetailsService;
 
-import jakarta.ws.rs.HttpMethod;
 
 @Configuration
 public class SecurityConfiguration {
@@ -29,7 +28,6 @@ public class SecurityConfiguration {
             .authorizeHttpRequests((authorizeHttpRequests) -> 
             
                 authorizeHttpRequests
-                    .requestMatchers(HttpMethod.GET, "/users/**").permitAll()
                     .anyRequest().permitAll()
             );
             return http.build();

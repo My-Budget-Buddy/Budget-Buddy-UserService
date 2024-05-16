@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.skillstorm.user_service.dtos.UserDto;
 import com.skillstorm.user_service.models.User;
-import com.skillstorm.user_service.repositories.UserRepository;
 import com.skillstorm.user_service.services.UserService;
 
 @RestController

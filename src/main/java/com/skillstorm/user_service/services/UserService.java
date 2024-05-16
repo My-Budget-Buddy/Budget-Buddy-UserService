@@ -58,7 +58,7 @@ public class UserService {
         // Id must be null to create a new entry. Role must be ROLE_USER
         user.setId(null);
         user.setRole("ROLE_USER");
-        user.setPassword(encoder.encode(user.getPassword()));
+        // user.setPassword(encoder.encode(user.getPassword()));
 
         User savedUser = userRepo.save(user);
 
