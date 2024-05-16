@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.skillstorm.user_service.dtos.UserDto;
@@ -23,9 +22,6 @@ public class UserService {
 
     @Autowired
     private UserMapper mapper;
-
-    @Autowired
-    private PasswordEncoder encoder;
 
 
     public List<UserDto> findAllUsers() {
@@ -55,10 +51,8 @@ public class UserService {
             throw new ExistingAccountException();
         }
 
-        // Id must be null to create a new entry. Role must be ROLE_USER
+        // Id must be null to create a new entry
         user.setId(null);
-        user.setRole("ROLE_USER");
-        // user.setPassword(encoder.encode(user.getPassword()));
 
         User savedUser = userRepo.save(user);
 

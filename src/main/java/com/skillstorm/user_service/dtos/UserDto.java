@@ -8,19 +8,17 @@ public class UserDto {
     private String password;
     private String firstName;
     private String lastName;
-    private String role;
 
 
     public UserDto() {
     }
 
-    public UserDto(Integer id, String email, String password, String firstName, String lastName, String role) {
+    public UserDto(Integer id, String email, String password, String firstName, String lastName) {
         this.id = id;
         this.email = email;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.role = role;
     }
 
     public Integer getId() {
@@ -63,14 +61,6 @@ public class UserDto {
         this.lastName = lastName;
     }
 
-    public String getRole() {
-        return this.role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
     public UserDto id(Integer id) {
         setId(id);
         return this;
@@ -96,11 +86,6 @@ public class UserDto {
         return this;
     }
 
-    public UserDto role(String role) {
-        setRole(role);
-        return this;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == this)
@@ -109,12 +94,12 @@ public class UserDto {
             return false;
         }
         UserDto userDto = (UserDto) o;
-        return Objects.equals(id, userDto.id) && Objects.equals(email, userDto.email) && Objects.equals(password, userDto.password) && Objects.equals(firstName, userDto.firstName) && Objects.equals(lastName, userDto.lastName) && Objects.equals(role, userDto.role);
+        return Objects.equals(id, userDto.id) && Objects.equals(email, userDto.email) && Objects.equals(password, userDto.password) && Objects.equals(firstName, userDto.firstName) && Objects.equals(lastName, userDto.lastName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, email, password, firstName, lastName, role);
+        return Objects.hash(id, email, password, firstName, lastName);
     }
 
     @Override
@@ -125,8 +110,8 @@ public class UserDto {
             ", password='" + getPassword() + "'" +
             ", firstName='" + getFirstName() + "'" +
             ", lastName='" + getLastName() + "'" +
-            ", role='" + getRole() + "'" +
             "}";
     }
-    
+
+
 }
