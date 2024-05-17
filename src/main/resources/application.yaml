@@ -7,7 +7,7 @@ spring:
         name: user-service
 
     datasource:
-        url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/budget-buddy-users}
+        url: ${DATABASE_URL:jdbc:postgresql://host.docker.internal:5432/budget-buddy-users}
         username: ${DATABASE_USERNAME:postgres}
         password: ${DATABASE_PASSWORD:root}                          
 
@@ -23,7 +23,7 @@ spring:
 eureka:
     client:
         service-url:
-            defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+            defaultZone: ${EUREKA_URL:http://host.docker.internal:8761/eureka}
 
     
     instance:
