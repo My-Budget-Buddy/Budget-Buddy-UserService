@@ -19,9 +19,6 @@ public class User {
     @Column
     private String email;
 
-    @Column
-    private String password;
-
     @Column(name = "first_name")
     private String firstName;
 
@@ -32,10 +29,9 @@ public class User {
     public User() {
     }
 
-    public User(Integer id, String email, String password, String firstName, String lastName) {
+    public User(Integer id, String email, String firstName, String lastName) {
         this.id = id;
         this.email = email;
-        this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
     }
@@ -54,14 +50,6 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPassword() {
-        return this.password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getFirstName() {
@@ -90,11 +78,6 @@ public class User {
         return this;
     }
 
-    public User password(String password) {
-        setPassword(password);
-        return this;
-    }
-
     public User firstName(String firstName) {
         setFirstName(firstName);
         return this;
@@ -113,12 +96,12 @@ public class User {
             return false;
         }
         User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(email, user.email) && Objects.equals(password, user.password) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName);
+        return Objects.equals(id, user.id) && Objects.equals(email, user.email) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, email, password, firstName, lastName);
+        return Objects.hash(id, email, firstName, lastName);
     }
 
     @Override
@@ -126,10 +109,9 @@ public class User {
         return "{" +
             " id='" + getId() + "'" +
             ", email='" + getEmail() + "'" +
-            ", password='" + getPassword() + "'" +
             ", firstName='" + getFirstName() + "'" +
             ", lastName='" + getLastName() + "'" +
             "}";
     }
-    
+
 }
