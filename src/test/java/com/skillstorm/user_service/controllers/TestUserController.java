@@ -31,9 +31,9 @@ public class TestUserController {
 
     UserMapper mapper = new UserMapper();
 
-    private UserDto mockUser = new UserDto(1, "johndoe@gmail.com", "pw123", "john", "doe");
-    private UserDto mockUser2 = new UserDto(1, "janedoe@gmail.com", "pw123", "jane", "doe");
-    private User mockUser3 = new User(1, "johndoe@gmail.com", "pw123", "john", "doe");
+    private UserDto mockUser = new UserDto(1, "johndoe@gmail.com", "john", "doe");
+    private UserDto mockUser2 = new UserDto(1, "janedoe@gmail.com", "jane", "doe");
+    private User mockUser3 = new User(1, "johndoe@gmail.com", "john", "doe");
 
 
     @Test

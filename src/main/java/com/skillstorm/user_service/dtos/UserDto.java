@@ -1,11 +1,11 @@
 package com.skillstorm.user_service.dtos;
+
 import java.util.Objects;
 
 public class UserDto {
-    
+
     private Integer id;
     private String email;
-    private String password;
     private String firstName;
     private String lastName;
 
@@ -13,10 +13,9 @@ public class UserDto {
     public UserDto() {
     }
 
-    public UserDto(Integer id, String email, String password, String firstName, String lastName) {
+    public UserDto(Integer id, String email, String firstName, String lastName) {
         this.id = id;
         this.email = email;
-        this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
     }
@@ -35,14 +34,6 @@ public class UserDto {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPassword() {
-        return this.password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getFirstName() {
@@ -71,11 +62,6 @@ public class UserDto {
         return this;
     }
 
-    public UserDto password(String password) {
-        setPassword(password);
-        return this;
-    }
-
     public UserDto firstName(String firstName) {
         setFirstName(firstName);
         return this;
@@ -94,24 +80,22 @@ public class UserDto {
             return false;
         }
         UserDto userDto = (UserDto) o;
-        return Objects.equals(id, userDto.id) && Objects.equals(email, userDto.email) && Objects.equals(password, userDto.password) && Objects.equals(firstName, userDto.firstName) && Objects.equals(lastName, userDto.lastName);
+        return Objects.equals(id, userDto.id) && Objects.equals(email, userDto.email) && Objects.equals(firstName, userDto.firstName) && Objects.equals(lastName, userDto.lastName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, email, password, firstName, lastName);
+        return Objects.hash(id, email, firstName, lastName);
     }
 
     @Override
     public String toString() {
         return "{" +
-            " id='" + getId() + "'" +
-            ", email='" + getEmail() + "'" +
-            ", password='" + getPassword() + "'" +
-            ", firstName='" + getFirstName() + "'" +
-            ", lastName='" + getLastName() + "'" +
-            "}";
+                " id='" + getId() + "'" +
+                ", email='" + getEmail() + "'" +
+                ", firstName='" + getFirstName() + "'" +
+                ", lastName='" + getLastName() + "'" +
+                "}";
     }
-
 
 }
