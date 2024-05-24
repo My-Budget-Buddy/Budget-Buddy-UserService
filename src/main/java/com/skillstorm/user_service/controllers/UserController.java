@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,10 +34,12 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserDto> findUserById(@PathVariable int id) {
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserDto> findUserById(@PathVariable int userId, @RequestHeader String headerUserId) {
 
-        UserDto user = userService.findById(id);
+        userService.compareHeaderIdWithRequestedDataId(userId, headerUserId);
+
+        UserDto user = userService.findById(userId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -48,16 +51,20 @@ public class UserController {
     }
 
     @PutMapping
-    public ResponseEntity<UserDto> updateUser(@RequestBody User user) {
+    public ResponseEntity<UserDto> updateUser(@RequestBody User user, @RequestHeader String userId) {
+
+        userService.compareHeaderIdWithRequestedDataId(user.getId(), userId);
 
         UserDto updatedUser = userService.updateUser(user);
         return new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable int id) {
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable int userId, @RequestHeader String headerUserId) {
 
-        userService.deleteUser(id);
+        userService.compareHeaderIdWithRequestedDataId(userId, headerUserId);
+
+        userService.deleteUser(userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
