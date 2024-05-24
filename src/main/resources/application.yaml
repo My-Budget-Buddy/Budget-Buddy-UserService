@@ -7,9 +7,9 @@ spring:
         name: user-service
 
     datasource:
-        url: ${PG_DATABASE_URL:jdbc:postgresql://localhost:5432/budget-buddy-users}
-        username: ${PG_DATABASE_USERNAME:postgres}
-        password: ${PG_DATABASE_PASSWORD:password}
+        url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/budget-buddy-users}
+        username: ${DATABASE_USERNAME:postgres}
+        password: ${DATABASE_PASSWORD:password}
 
     output:
         ansi:
