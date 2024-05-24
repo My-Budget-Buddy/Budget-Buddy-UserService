@@ -35,7 +35,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> findUserById(@PathVariable int userId, @RequestHeader(value="ID") String headerUserId) {
+    public ResponseEntity<UserDto> findUserById(@PathVariable int userId, @RequestHeader(name = "User-ID") String headerUserId) {
 
         userService.compareHeaderIdWithRequestedDataId(userId, headerUserId);
 
@@ -51,7 +51,7 @@ public class UserController {
     }
 
     @PutMapping
-    public ResponseEntity<UserDto> updateUser(@RequestBody User user, @RequestHeader(value="ID") String userId) {
+    public ResponseEntity<UserDto> updateUser(@RequestBody User user, @RequestHeader(name = "User-ID") String userId) {
 
         userService.compareHeaderIdWithRequestedDataId(user.getId(), userId);
 
@@ -60,7 +60,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable int userId, @RequestHeader(value="ID") String headerUserId) {
+    public ResponseEntity<Void> deleteUser(@PathVariable int userId, @RequestHeader(name = "User-ID") String headerUserId) {
 
         userService.compareHeaderIdWithRequestedDataId(userId, headerUserId);
 
