@@ -43,18 +43,12 @@ public class UserService {
         return mapper.toDto(foundUser.get());
     }
 
-    public UserDto createUser(User user) {
+    public UserDto createUser(User authUser) {
 
-        Optional<User> foundUser = userRepo.findByEmail(user.getEmail());
-
-        if (foundUser.isPresent()) {
-            throw new ExistingAccountException();
-        }
-
-        // Id must be null to create a new entry
-        user.setId(null);
-
-        User savedUser = userRepo.save(user);
+        // ID value comes from the Authentication service as that's where new users register
+        // Don't need to perform a unique check for email (username) as that is also done by the Auth service
+        // This creates a User record with an ID and email and all other fields null
+        User savedUser = userRepo.save(authUser);
 
         return mapper.toDto(savedUser);
     }
