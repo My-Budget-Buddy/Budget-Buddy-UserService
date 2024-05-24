@@ -4,7 +4,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.amqp.core.Exchange;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.skillstorm.user_service.dtos.UserDto;
@@ -23,6 +26,15 @@ public class UserService {
 
     @Autowired
     private UserMapper mapper;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private Exchange fanoutExchange;
+
+    @Value("${routing-key}")
+    private String routingKey;
 
 
     // This method checks to make sure that the user is retrieving or updating information that relates to their own account. This prevents a user with an ID of 1 from updating the data of a different user
@@ -85,5 +97,10 @@ public class UserService {
         }
 
         userRepo.deleteById(id);
+    }
+
+    public void processDeleteUser(int id) {
+
+        rabbitTemplate.convertAndSend(fanoutExchange.getName(), routingKey, id);
     }
 }

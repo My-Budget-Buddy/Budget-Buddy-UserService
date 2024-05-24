@@ -23,8 +23,16 @@ spring:
 eureka:
     client:
         service-url:
-            defaultZone: ${EUREKA_URL:http://host.docker.internal:8761/eureka}
+            defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
 
     
     instance:
         leaseRenewalIntervalInSeconds: 30
+
+
+# creating the rabbitmq fanout exchange
+exchanges:
+    fanout: delete-user                         # name of the exchange
+
+# creating the routing key for the exchange
+routing-key: key1234

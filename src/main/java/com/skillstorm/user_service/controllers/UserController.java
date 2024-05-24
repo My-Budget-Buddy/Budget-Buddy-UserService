@@ -64,6 +64,7 @@ public class UserController {
 
         userService.compareHeaderIdWithRequestedDataId(userId, headerUserId);
 
+        userService.processDeleteUser(userId);
         userService.deleteUser(userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
