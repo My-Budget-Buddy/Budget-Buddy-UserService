@@ -18,4 +18,10 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(400).body(exception.getMessage());
     }
+
+    @ExceptionHandler(IdMismatchException.class)
+    public ResponseEntity<?> idMismtachException(IdMismatchException exception) {
+
+        return ResponseEntity.status(401).body(exception.getMessage());
+    }
 }

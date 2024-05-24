@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.skillstorm.user_service.dtos.UserDto;
 import com.skillstorm.user_service.exceptions.ExistingAccountException;
+import com.skillstorm.user_service.exceptions.IdMismatchException;
 import com.skillstorm.user_service.exceptions.ResourceNotFoundException;
 import com.skillstorm.user_service.mappers.UserMapper;
 import com.skillstorm.user_service.models.User;
@@ -23,6 +24,14 @@ public class UserService {
     @Autowired
     private UserMapper mapper;
 
+
+    // This method checks to make sure that the user is retrieving or updating information that relates to their own account. This prevents a user with an ID of 1 from updating the data of a different user
+    public void compareHeaderIdWithRequestedDataId(int userId, String headerUserId) {
+
+        if (userId != Integer.valueOf(headerUserId)) {
+            throw new IdMismatchException();
+        }
+    }
 
     public List<UserDto> findAllUsers() {
 
