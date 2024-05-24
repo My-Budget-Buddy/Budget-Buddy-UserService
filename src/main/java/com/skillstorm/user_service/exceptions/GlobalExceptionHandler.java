@@ -22,6 +22,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IdMismatchException.class)
     public ResponseEntity<?> idMismtachException(IdMismatchException exception) {
 
-        return ResponseEntity.status(401).body(exception.getMessage());
+        return ResponseEntity.status(403).body(exception.getMessage());
     }
 }
