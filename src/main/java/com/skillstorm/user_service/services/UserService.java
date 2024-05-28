@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.skillstorm.user_service.dtos.UserDto;
-import com.skillstorm.user_service.exceptions.ExistingAccountException;
 import com.skillstorm.user_service.exceptions.IdMismatchException;
 import com.skillstorm.user_service.exceptions.ResourceNotFoundException;
 import com.skillstorm.user_service.mappers.UserMapper;
