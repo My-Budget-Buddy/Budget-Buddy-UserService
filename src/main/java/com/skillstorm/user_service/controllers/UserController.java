@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,12 +33,10 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> findUserById(@PathVariable int userId, @RequestHeader(name = "User-ID") String headerUserId) {
+    @GetMapping("/user")
+    public ResponseEntity<UserDto> findUserById(@RequestHeader(name = "User-ID") String userId) {
 
-        userService.compareHeaderIdWithRequestedDataId(userId, headerUserId);
-
-        UserDto user = userService.findById(userId);
+        UserDto user = userService.findById(Integer.valueOf(userId));
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -59,13 +56,11 @@ public class UserController {
         return new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable int userId, @RequestHeader(name = "User-ID") String headerUserId) {
+    @DeleteMapping()
+    public ResponseEntity<Void> deleteUser(@RequestHeader(name = "User-ID") String userId) {
 
-        userService.compareHeaderIdWithRequestedDataId(userId, headerUserId);
-
-        userService.processDeleteUser(userId);
-        userService.deleteUser(userId);
+        userService.processDeleteUser(Integer.valueOf(userId));
+        userService.deleteUser(Integer.valueOf(userId));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
