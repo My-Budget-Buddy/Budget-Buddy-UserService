@@ -28,3 +28,4 @@ eureka:
     
     instance:
         leaseRenewalIntervalInSeconds: 30
+        hostname: ${AWS_HOSTNAME:localhost}
