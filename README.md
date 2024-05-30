@@ -80,13 +80,13 @@ The User Service provides endpoints for managing user transactions. You can acce
     [
       {
         "id": 1,
-        "email": "JohnDoe@gmail.com,
+        "email": "JohnDoe@gmail.com",
         "firstName": "John",
         "lastName": "Doe"
       },
       {
         "id": 2,
-        "email": "JaneDoe@gmail.com,
+        "email": "JaneDoe@gmail.com",
         "firstName": "Jane",
         "lastName": "Doe"
       }
@@ -137,7 +137,7 @@ The User Service provides endpoints for managing user transactions. You can acce
         "id": 1,
         "email": "JaneDoe2@yahoo.com",
         "firstName": "Jane",
-        "lastName": "Doe
+        "lastName": "Doe"
       }
     ```
 - **Response**:
@@ -146,7 +146,7 @@ The User Service provides endpoints for managing user transactions. You can acce
           "id": 1,
           "email": "JaneDoe2@yahoo.com",
           "firstName": "Jane",
-          "lastName": "Doe
+          "lastName": "Doe"
         }
       ```
 
