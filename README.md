@@ -115,7 +115,7 @@ The User Service provides endpoints for managing user transactions. You can acce
         "id": null,
         "email": "JaneDoe@gmail.com",
         "firstName": "Jane",
-        "lastName:" "Doe"
+        "lastName": "Doe"
       }
     ```
 - **Response**:
@@ -148,7 +148,7 @@ The User Service provides endpoints for managing user transactions. You can acce
           "firstName": "Jane",
           "lastName": "Doe"
         }
-      ```
+  ```
 
 #### Delete a User
 - **URL**: ``` DELETE /users```
