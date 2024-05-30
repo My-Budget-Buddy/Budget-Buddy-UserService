@@ -159,6 +159,6 @@ The User Service provides endpoints for managing user transactions. You can acce
 
 To run the tests, use the following command:
 
-``bash
+```bash
 mvn test
 ```
