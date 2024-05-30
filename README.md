@@ -123,7 +123,7 @@ The User Service provides endpoints for managing user transactions. You can acce
       {
         "id": 1,
         "email": "JaneDoe@gmail.com",
-        "firstName:" "Jane",
+        "firstName": "Jane",
         "lastName": "Doe"
       {
     ```
