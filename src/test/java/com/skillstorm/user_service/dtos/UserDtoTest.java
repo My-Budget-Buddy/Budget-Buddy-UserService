@@ -2,6 +2,7 @@ package com.skillstorm.user_service.dtos;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,10 +13,22 @@ public class UserDtoTest {
     String lastName;
     Integer id;
 
+    /*
+     * Intialize an object reference for test case
+     */
     @BeforeEach
-    public void init() {
-        System.out.println("Before Testing: Initializing ");
+    public void setup() {
+        System.out.println("Before Testing: Initializing object reference...");
         user = new UserDto();
+    }
+
+    /*
+     * Remove object reference after each test case
+     */
+    @AfterEach
+    public void teardown() {
+        System.out.println("Teardown: Removing object reference.");
+        user = null;
     }
 
     @Test
