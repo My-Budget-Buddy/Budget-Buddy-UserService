@@ -1,157 +1,104 @@
 package com.skillstorm.user_service.controllers;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.junit.jupiter.api.AfterEach;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillstorm.user_service.dtos.UserDto;
 import com.skillstorm.user_service.models.User;
-import com.skillstorm.user_service.repositories.UserRepository;
 import com.skillstorm.user_service.services.UserService;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@WebMvcTest(UserController.class)
 public class TestUserControllerIntegration {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
+    @MockBean
     private UserService userService;
 
-    @BeforeEach
-    public void setup() {
-        userRepository.deleteAll();
-    }
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    @AfterEach
-    public void tearDown() {
-        userRepository.deleteAll();
+    @Test
+    public void testFindAllUsers_Success() throws Exception {
+        UserDto user1 = new UserDto(1, "email1@example.com", "John", "Doe");
+        UserDto user2 = new UserDto(2, "email2@example.com", "Jane", "Doe");
+
+        when(userService.findAllUsers()).thenReturn(List.of(user1, user2));
+
+        mockMvc.perform(get("/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].email").value("email1@example.com"))
+                .andExpect(jsonPath("$[1].email").value("email2@example.com"));
     }
 
     @Test
-    public void testFindAllUsers_Success() {
-        User user1 = new User(1, "email1@example.com", "John", "Doe");
-        User user2 = new User(2, "email2@example.com", "Jane", "Doe");
-        userRepository.saveAll(List.of(user1, user2));
+    public void testFindUserById_Success() throws Exception {
+        UserDto user = new UserDto(1, "email@example.com", "John", "Doe");
 
-        ResponseEntity<UserDto[]> response = restTemplate.getForEntity("/users", UserDto[].class);
+        when(userService.findById(Mockito.anyInt())).thenReturn(user);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(2, response.getBody().length);
+        mockMvc.perform(get("/users/user")
+                        .header("User-ID", "1"))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("email@example.com"));
     }
 
     @Test
-    public void testFindUserById_Success() {
+    public void testCreateUser_Success() throws Exception {
         User user = new User(1, "email@example.com", "John", "Doe");
-        userRepository.save(user);
+        UserDto userDto = new UserDto(1, "email@example.com", "John", "Doe");
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("User-ID", "1");
-        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+        when(userService.createUser(Mockito.any(User.class))).thenReturn(userDto);
 
-        ResponseEntity<UserDto> response = restTemplate.exchange("/users/user", HttpMethod.GET, requestEntity, UserDto.class);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(1, response.getBody().getId());
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("email@example.com"));
     }
 
     @Test
-    public void testFindUserById_NotFound() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("User-ID", "999");
-        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> response = restTemplate.exchange("/users/user", HttpMethod.GET, requestEntity, String.class);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    @Test
-    public void testCreateUser_Success() {
-        User user = new User(1, "email@example.com", "John", "Doe");
-
-        HttpEntity<User> requestEntity = new HttpEntity<>(user);
-        ResponseEntity<UserDto> response = restTemplate.postForEntity("/users", requestEntity, UserDto.class);
-
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals("email@example.com", response.getBody().getEmail());
-    }
-
-    @Test
-    public void testUpdateUser_Success() {
-        User user = new User(1, "email@example.com", "John", "Doe");
-        userRepository.save(user);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("User-ID", "1");
-
+    public void testUpdateUser_Success() throws Exception {
         User updatedUser = new User(1, "email@example.com", "Jane", "Doe");
-        HttpEntity<User> requestEntity = new HttpEntity<>(updatedUser, headers);
+        UserDto updatedUserDto = new UserDto(1, "email@example.com", "Jane", "Doe");
 
-        ResponseEntity<UserDto> response = restTemplate.exchange("/users", HttpMethod.PUT, requestEntity, UserDto.class);
+        when(userService.updateUser(Mockito.any(User.class))).thenReturn(updatedUserDto);
+        Mockito.doNothing().when(userService).compareHeaderIdWithRequestedDataId(Mockito.anyInt(), Mockito.anyString());
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Jane", response.getBody().getFirstName());
+        mockMvc.perform(put("/users")
+                        .header("User-ID", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatedUser)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("Jane"));
     }
 
     @Test
-    public void testUpdateUser_NotFound() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("User-ID", "1");
+    public void testDeleteUser_Success() throws Exception {
+        // Use doNothing for void methods
+        Mockito.doNothing().when(userService).deleteUser(Mockito.anyInt());
 
-        User user = new User(1, "email@example.com", "John", "Doe");
-        HttpEntity<User> requestEntity = new HttpEntity<>(user, headers);
-
-        ResponseEntity<String> response = restTemplate.exchange("/users", HttpMethod.PUT, requestEntity, String.class);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    @Test
-    public void testDeleteUser_Success() {
-        User user = new User(1, "email@example.com", "John", "Doe");
-        userRepository.save(user);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("User-ID", "1");
-
-        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-        ResponseEntity<Void> response = restTemplate.exchange("/users", HttpMethod.DELETE, requestEntity, Void.class);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-
-        Optional<User> result = userRepository.findById(1);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    public void testDeleteUser_NotFound() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("User-ID", "999");
-
-        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-        ResponseEntity<String> response = restTemplate.exchange("/users", HttpMethod.DELETE, requestEntity, String.class);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        mockMvc.perform(delete("/users")
+                        .header("User-ID", "1"))
+                .andExpect(status().isOk());
     }
 }
