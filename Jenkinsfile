@@ -97,7 +97,7 @@ pipeline {
         branch 'testing-main'
       }
       steps {
-        echo 'Deploying...'
+        echo 'Deploying... (Test)'
       }
     }
   }
