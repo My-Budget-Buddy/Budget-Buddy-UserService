@@ -45,7 +45,7 @@ pipeline {
     stages {
         stage('Deliver for development') {
             when {
-                branch 'test-cohort'
+                branch 'testing-cohort'
             }
             steps {
                 container('kaniko') {
