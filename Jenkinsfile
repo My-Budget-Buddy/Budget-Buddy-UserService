@@ -42,40 +42,63 @@ pipeline {
     }
   }
 
-    stages {
-        stage('Deliver for development') {
-            when {
-                branch 'testing-cohort'
-            }
-            steps {
-                container('kaniko') {
-                sh './jenkins/scripts/deliver-for-development.sh'
-                input message: 'Finished using the web site? (Click "Proceed" to continue)'
-                sh './jenkins/scripts/kill.sh'
-                }
-            }
+  environment {
+    MAJOR_VERSION = '0'
+    MINOR_VERSION = '0'
+    PATCH_VERSION = "${env.BUILD_NUMBER}"
+  }
+
+  stages {
+    stage('Prepare Version') {
+      steps {
+        script {
+          def newPatchVersion = PATCH_VERSION.toInteger() + 1
+          env.VERSION = "${MAJOR_VERSION}.${MINOR_VERSION}.${newPatchVersion}"
+          echo "Updated version to: ${env.VERSION}"
         }
-        stage('Deploy for production') {
-            when {
-                branch 'testing-main'
-            }
-            steps {
-                container('kaniko') {
-                sh './jenkins/scripts/deploy-for-production.sh'
-                input message: 'Finished using the web site? (Click "Proceed" to continue)'
-                sh './jenkins/scripts/kill.sh'
-                }
-            }
-        }
-        stage('Test') {
-            steps {
-                echo 'Testing...'
-            }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'Deploying...'
-            }
-        }
+      }
     }
+
+    stage('Build for development') {
+      when {
+        branch 'testing-cohort'
+      }
+      
+      steps {
+        container('maven') {
+          sh 'mvn clean install -DskipTests=true -Dspring.profiles.active=build'
+        }
+      }
+    }
+
+    stage('Test and Analyze for development') {
+      when {
+        branch 'testing-cohort'
+      }
+
+      steps {
+        container('maven') {
+          sh 'mvn clean verify -Pcoverage -Dspring.profiles.active=test'
+          withSonarQubeEnv('SonarCloud') {
+            sh '''
+              mvn sonar:sonar \
+                  -Dsonar.projectKey=My-Budget-Buddy_Budget-Buddy-UserService \
+                  -Dsonar.projectName=Budget-Buddy-UserService \
+                  -Dsonar.java.binaries=target/classes \
+                  -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+              '''
+          }
+        }
+      }
+    }
+
+    stage('Deploy for production') {
+      when {
+        branch 'testing-main'
+      }
+      steps {
+        echo 'Deploying...'
+      }
+    }
+  }
 }
