@@ -6,6 +6,12 @@ pipeline {
             kind: Pod
             spec:
               containers:
+              - name: maven
+                image: maven:latest
+                command:
+                - "sleep"
+                args:
+                - "9999999"
               - name: kaniko
                 image: 924809052459.dkr.ecr.us-east-1.amazonaws.com/kaniko:latest
                 imagePullPolicy: Always
@@ -33,8 +39,6 @@ pipeline {
                 args:
                 - '9999999'
                 tty: true
-              // - name: maven
-              //   image: maven
               volumes:
               - name: kaniko-cache
                 emptyDir: {}
@@ -59,45 +63,45 @@ pipeline {
       }
     }
 
-    // stage('Build for development') {
-    //   when {
-    //     branch 'testing-cohort'
-    //   }
+    stage('Build for development') {
+      when {
+        branch 'testing-cohort'
+      }
 
-    //   steps {
-    //     container('maven') {
-    //       sh 'mvn clean install -DskipTests=true -Dspring.profiles.active=build'
-    //     }
-    //   }
-    // }
+      steps {
+        container('maven') {
+          sh 'mvn clean install -DskipTests=true -Dspring.profiles.active=build'
+        }
+      }
+    }
 
-    // stage('Test and Analyze for development') {
-    //   when {
-    //     branch 'testing-cohort'
-    //   }
+    stage('Test and Analyze for development') {
+      when {
+        branch 'testing-cohort'
+      }
 
-    //   steps {
-    //     container('maven') {
-    //       sh 'mvn clean verify -Pcoverage -Dspring.profiles.active=test'
-    //       withSonarQubeEnv('SonarCloud') {
-    //         sh '''
-    //           mvn sonar:sonar \
-    //               -Dsonar.projectKey=My-Budget-Buddy_Budget-Buddy-UserService \
-    //               -Dsonar.projectName=Budget-Buddy-UserService \
-    //               -Dsonar.java.binaries=target/classes \
-    //               -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-    //           '''
-    //       }
-    //     }
-    //   }
-    // }
+      steps {
+        container('maven') {
+          sh 'mvn clean verify -Pcoverage -Dspring.profiles.active=test'
+          withSonarQubeEnv('SonarCloud') {
+            sh '''
+              mvn sonar:sonar \
+                  -Dsonar.projectKey=My-Budget-Buddy_Budget-Buddy-UserService \
+                  -Dsonar.projectName=Budget-Buddy-UserService \
+                  -Dsonar.java.binaries=target/classes \
+                  -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+              '''
+          }
+        }
+      }
+    }
 
     stage('Deploy for production') {
       when {
         branch 'testing-main'
       }
       steps {
-        echo 'Deploying... (Test)'
+        echo 'Deploying...'
       }
     }
   }
