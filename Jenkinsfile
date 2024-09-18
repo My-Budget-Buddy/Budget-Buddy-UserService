@@ -53,6 +53,27 @@ pipeline {
   }
 
   stages {
+    stage('Testing EKS') {
+      when {
+        branch 'testing-cohort'
+      }
+        steps {
+          container('kaniko') {
+            script {
+              sh 'aws eks --region us-east-1 update-kubeconfig --name project3-eks'
+              sh 'kubectl config current-context'
+              withCredentials([
+                          string(credentialsId: 'STAGING_DATABASE_USER', variable: 'postgres-user'),
+                          string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'postgres-password')])
+                {
+                  sh 'cd kubernetes && kubectl apply -f ./'
+                  sh 'kubectl describe pods'
+                }
+            }
+          }
+        }
+    }
+
     stage('Prepare Version') {
       steps {
         script {
