@@ -66,8 +66,13 @@ pipeline {
                           string(credentialsId: 'STAGING_DATABASE_USER', variable: 'postgres-user'),
                           string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'postgres-password')])
                 {
-                  sh 'cd kubernetes && kubectl apply -f ./'
-                  sh 'kubectl describe pods'
+                  sh '''
+                    cd kubernetes
+                    kubectl apply -f postgres-secret.yaml
+                    kubectl apply -f postgres-service.yaml
+                    kubectl apply -f postgres-deployment.yaml
+                    kubectl describe pods
+                  '''
                 }
             }
           }
