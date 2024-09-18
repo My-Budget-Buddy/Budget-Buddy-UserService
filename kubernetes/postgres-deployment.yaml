@@ -21,10 +21,7 @@ spec:
         - containerPort: 5432
         env:
         - name: POSTGRES_DB
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secret
-              key: POSTGRES_DB
+          value: my_budget_buddy
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
