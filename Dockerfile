@@ -1,4 +1,5 @@
-FROM 924809052459.dkr.ecr.us-east-1.amazonaws.com/maven as build
+# FROM 924809052459.dkr.ecr.us-east-1.amazonaws.com/maven as build
+FROM maven:amazoncorretto as build
 WORKDIR /app
 COPY . /app
 RUN mvn clean install -DskipTests
