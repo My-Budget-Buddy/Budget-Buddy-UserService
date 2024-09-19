@@ -70,13 +70,13 @@ pipeline {
                     sh 'aws eks --region us-east-1 update-kubeconfig --name project3-eks'
                     sh 'kubectl config current-context'
                     withCredentials([
-                      string(credentialsId: 'STAGING_DATABASE_USER', variable: 'postgres-user'),
-                      string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'postgres-password')])
+                      string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USERNAME'),
+                      string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
                     {
                     sh '''
                         cd kubernetes
-                        sed -i 's/<postgres-user>/$postgres_user/' postgres-secret.yaml
-                        sed -i 's/<postgres-password>/$postgres_password/' postgres-secret.yaml
+                        sed -i 's/<postgres-user>/$DATABASE_USERNAME/' postgres-secret.yaml
+                        sed -i 's/<postgres-password>/$DATABASE_PASSWORD/' postgres-secret.yaml
                         kubectl apply -f initdb-configmap.yaml
                         kubectl apply -f postgres-secret.yaml
                         kubectl apply -f postgres-service.yaml
@@ -104,8 +104,8 @@ pipeline {
                         export DATABASE_URL=jdbc:postgresql://postgres.devops-tools.svc.cluster.local:5432/my_budget_buddy
                         mvn clean verify -Pcoverage -Dspring.profiles.active=test \
                             -Dspring.datasource.url=$DATABASE_URL \
-                            -Dspring.datasource.username=${DATABASE_USERNAME} \
-                            -Dspring.datasource.password=${DATABASE_PASSWORD}
+                            -Dspring.datasource.username=$DATABASE_USERNAME \
+                            -Dspring.datasource.password=$DATABASE_PASSWORD
                     '''
                     withSonarQubeEnv('SonarCloud') {
                         sh '''
