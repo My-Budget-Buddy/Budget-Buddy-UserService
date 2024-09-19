@@ -75,10 +75,13 @@ pipeline {
                     {
                     sh '''
                         cd kubernetes
+                        sed -i 's/<postgres-user>/$postgres_user/' postgres-secret.yaml
+                        sed -i 's/<postgres-password>/$postgres_password/' postgres-secret.yaml
                         kubectl apply -f initdb-configmap.yaml
                         kubectl apply -f postgres-secret.yaml
                         kubectl apply -f postgres-service.yaml
                         kubectl apply -f postgres-deployment.yaml
+                        sleep 5
                         kubectl describe pods
                     '''
                     }
