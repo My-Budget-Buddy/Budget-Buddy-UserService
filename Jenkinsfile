@@ -134,7 +134,7 @@ pipeline {
                 fi
                 mkdir -p /kaniko/.docker
                 echo "{\"auths\":{\"924809052459.dkr.ecr.us-east-1.amazonaws.com\":{\"auth\":\"$(echo -n AWS:$ECR_LOGIN | base64)\"}}}" > /kaniko/.docker/config.json
-                /kaniko/executor --cleanup --cache=false --dockerfile=Dockerfile.prod --context=dir://. --destination=924809052459.dkr.ecr.us-east-1.amazonaws.com/user-service:latest
+                /kaniko/executor --dockerfile=Dockerfile.prod --context=dir://. --destination=924809052459.dkr.ecr.us-east-1.amazonaws.com/user-service:latest
               '''
           }
         }
