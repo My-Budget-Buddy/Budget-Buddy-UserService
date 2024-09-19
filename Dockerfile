@@ -1,19 +1,11 @@
-FROM maven:3.8-openjdk-17 AS build
-
-WORKDIR /app
-
-COPY . /app
-
-RUN mvn clean package -DskipTests
-
 FROM alpine:latest
-
-RUN apk add --no-cache openjdk17-jre
-
-WORKDIR /app
-
-COPY --from=build /app/target/*.jar /app/app.jar
-
-EXPOSE 8081
-
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+  
+  RUN apk update && apk upgrade && apk add openjdk17-jre
+  
+  WORKDIR /app
+        
+  COPY target/*.jar /app/app.jar
+        
+  EXPOSE 8081
+        
+  CMD ["java", "-jar", "app.jar"]
