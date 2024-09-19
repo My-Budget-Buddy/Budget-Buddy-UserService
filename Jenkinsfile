@@ -102,7 +102,7 @@ pipeline {
                   string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
                 {
                     sh '''
-                        export DATABASE_URL=jdbc:postgresql://postgres.devops-tools.svc.cluster.local:5432/my_budget_buddy
+                        export DATABASE_URL="jdbc:postgresql://postgres.devops-tools.svc.cluster.local:5432/my_budget_buddy"
                         mvn clean verify -Pcoverage -Dspring.profiles.active=test \
                             -Dspring.datasource.url=$DATABASE_URL \
                             -Dspring.datasource.username=<postgres-user> \
