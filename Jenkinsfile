@@ -50,7 +50,7 @@ pipeline {
     
     stage('Build for Staging') {
         when {
-            branch 'daniel413x/pipeline'
+            branch 'testing-cohort'
         }
 
         steps {
@@ -62,7 +62,7 @@ pipeline {
 
     stage('Deploy Postgres') {
         when {
-            branch 'daniel413x/pipeline'
+            branch 'testing-cohort'
         }
         steps {
             container('kaniko') {
@@ -95,7 +95,7 @@ pipeline {
     
     stage('Test and Analyze for Staging') {
         when {
-            branch 'daniel413x/pipeline'
+            branch 'testing-cohort'
         }
 
         steps {
