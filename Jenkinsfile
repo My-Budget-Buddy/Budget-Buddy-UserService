@@ -102,8 +102,8 @@ pipeline {
                         export DATABASE_URL=jdbc:postgresql://postgres.devops-tools.svc.cluster.local:5432/my_budget_buddy
                         mvn clean verify -Pcoverage -Dspring.profiles.active=test \
                             -Dspring.datasource.url=$DATABASE_URL \
-                            -Dspring.datasource.username=${DATABASE_USERNAME} \
-                            -Dspring.datasource.password=${DATABASE_PASSWORD}
+                            -Dspring.datasource.username=postgres \
+                            -Dspring.datasource.password=postgres
                     '''
                     withSonarQubeEnv('SonarCloud') {
                         sh '''
