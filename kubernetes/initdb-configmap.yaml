@@ -4,4 +4,4 @@ metadata:
   name: initdb-configmap
 data:
   init.sql: |
-    CREATE DATABASE IF NOT EXISTS my_budget_buddy;
+    CREATE DATABASE my_budget_buddy;
