@@ -1,3 +1,5 @@
+# FROM 924809052459.dkr.ecr.us-east-1.amazonaws.com/maven as build
+
 FROM maven:3.8-openjdk-17 AS build
 
 WORKDIR /app
