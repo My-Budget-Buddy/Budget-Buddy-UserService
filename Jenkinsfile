@@ -75,7 +75,7 @@ pipeline {
                     {
                     sh '''
                         cd kubernetes
-                        kubectel delete -f ./
+                        kubectl delete -f ./
                         sleep 6
                         kubectl apply -f initdb-configmap.yaml
                         kubectl apply -f postgres-secret.yaml
