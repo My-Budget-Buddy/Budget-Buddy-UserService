@@ -75,12 +75,12 @@ pipeline {
                     {
                     sh '''
                         cd kubernetes
-                        
+                        sed -i 's/<postgres-user>/$postgres_user/' postgres-secret.yaml
+                        sed -i 's/<postgres-password>/$postgres_password/' postgres-secret.yaml
                         kubectl apply -f initdb-configmap.yaml
                         kubectl apply -f postgres-secret.yaml
                         kubectl apply -f postgres-service.yaml
                         kubectl apply -f postgres-deployment.yaml
-                        sleep 5
                         kubectl describe pods
                     '''
                     }
@@ -101,11 +101,11 @@ pipeline {
                   string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
                 {
                     sh '''
-                        export DATABASE_URL="jdbc:postgresql://postgres.devops-tools.svc.cluster.local:5432/my_budget_buddy"
+                        export DATABASE_URL=jdbc:postgresql://postgres.devops-tools.svc.cluster.local:5432/my_budget_buddy
                         mvn clean verify -Pcoverage -Dspring.profiles.active=test \
                             -Dspring.datasource.url=$DATABASE_URL \
-                            -Dspring.datasource.username=<postgres-user> \
-                            -Dspring.datasource.password=<postgres-password>
+                            -Dspring.datasource.username=${DATABASE_USERNAME} \
+                            -Dspring.datasource.password=${DATABASE_PASSWORD}
                     '''
                     withSonarQubeEnv('SonarCloud') {
                         sh '''
