@@ -50,7 +50,7 @@ pipeline {
     
     stage('Build for Staging') {
         when {
-            branch 'testing-cohort'
+            branch 'daniel413x/pipeline'
         }
 
         steps {
@@ -62,7 +62,7 @@ pipeline {
 
     stage('Deploy Postgres') {
         when {
-            branch 'testing-cohort'
+            branch 'daniel413x/pipeline'
         }
         steps {
             container('kaniko') {
@@ -70,11 +70,17 @@ pipeline {
                     sh 'aws eks --region us-east-1 update-kubeconfig --name project3-eks'
                     sh 'kubectl config current-context'
                     withCredentials([
-                      string(credentialsId: 'STAGING_DATABASE_USER', variable: 'postgres-user'),
-                      string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'postgres-password')])
+                      string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USERNAME'),
+                      string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
                     {
                     sh '''
                         cd kubernetes
+                        sed -i "s/<postgres-user>/$DATABASE_USERNAME/" postgres-secret.yaml
+                        sed -i "s/<postgres-password>/$DATABASE_PASSWORD/" postgres-secret.yaml
+                        kubectl delete -f initdb-configmap.yaml
+                        kubectl delete -f postgres-deployment.yaml
+                        kubectl delete -f postgres-service.yaml
+                        kubectl delete -f postgres-secret.yaml
                         kubectl apply -f initdb-configmap.yaml
                         kubectl apply -f postgres-secret.yaml
                         kubectl apply -f postgres-service.yaml
@@ -89,7 +95,7 @@ pipeline {
     
     stage('Test and Analyze for Staging') {
         when {
-            branch 'testing-cohort'
+            branch 'daniel413x/pipeline'
         }
 
         steps {
@@ -102,8 +108,8 @@ pipeline {
                         export DATABASE_URL=jdbc:postgresql://postgres.devops-tools.svc.cluster.local:5432/my_budget_buddy
                         mvn clean verify -Pcoverage -Dspring.profiles.active=test \
                             -Dspring.datasource.url=$DATABASE_URL \
-                            -Dspring.datasource.username=${DATABASE_USERNAME} \
-                            -Dspring.datasource.password=${DATABASE_PASSWORD}
+                            -Dspring.datasource.username=$DATABASE_USERNAME \
+                            -Dspring.datasource.password=$DATABASE_PASSWORD
                     '''
                     withSonarQubeEnv('SonarCloud') {
                         sh '''
@@ -134,7 +140,7 @@ pipeline {
                 fi
                 mkdir -p /kaniko/.docker
                 echo "{\"auths\":{\"924809052459.dkr.ecr.us-east-1.amazonaws.com\":{\"auth\":\"$(echo -n AWS:$ECR_LOGIN | base64)\"}}}" > /kaniko/.docker/config.json
-                /kaniko/executor --cleanup --cache=false --dockerfile=Dockerfile --context=dir://. --destination=924809052459.dkr.ecr.us-east-1.amazonaws.com/user-service:latest
+                /kaniko/executor --dockerfile=Dockerfile.prod --context=dir://. --destination=924809052459.dkr.ecr.us-east-1.amazonaws.com/user-service:latest
               '''
           }
         }
