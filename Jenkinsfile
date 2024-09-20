@@ -182,7 +182,6 @@ pipeline {
 
     // after this stage, the operative app is deployed to the test EKS cluster
     // and should be ready for testing on the test eks
-    
     stage('Deploy to Test EKS') {
     when {
         branch 'testing-cohort'
@@ -213,12 +212,12 @@ pipeline {
             '''
             }
         }
+      }
     }
-    
-    // add functional, performance tests
-
   }
   
+  // add functional, performance tests
+
   post {
     always {
       cleanWs()
