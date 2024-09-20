@@ -13,7 +13,7 @@ pipeline {
                 args:
                 - "9999999"
               - name: aws-kubectl
-                image: heyvaldemar/aws-kubectl:latest
+                image: 924809052459.dkr.ecr.us-east-1.amazonaws.com/aws-kubectl:latest
                 env:
                 - name: AWS_REGION
                   valueFrom:
