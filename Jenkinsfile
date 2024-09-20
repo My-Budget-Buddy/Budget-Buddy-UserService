@@ -68,6 +68,11 @@ pipeline {
     }
   }
 
+  environment {
+    SERVICE_NAME = 'user'
+    NAMESPACE = 'user-test'
+  }
+
   stages {
     
     stage('Build for Staging') {
@@ -101,7 +106,7 @@ pipeline {
 
                 cd Budget-Buddy-Kubernetes/Databases
                 chmod +x ./deploy-database.sh
-                ./deploy-database.sh user-test user $DATABASE_USERNAME $DATABASE_PASSWORD
+                ./deploy-database.sh ${NAMESPACE} ${SERVICE_NAME} $DATABASE_USERNAME $DATABASE_PASSWORD
                 
                 '''
                 }
@@ -121,7 +126,7 @@ pipeline {
                   string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
                 {
                     sh '''
-                        export DATABASE_URL=jdbc:postgresql://user-postgres.user-test.svc.cluster.local:5432/my_budget_buddy
+                        export DATABASE_URL=jdbc:postgresql://${SERVICE_NAME}-postgres.${NAMESPACE}.svc.cluster.local:5432/my_budget_buddy
                         mvn clean verify -Pcoverage -Dspring.profiles.active=test \
                             -Dspring.datasource.url=$DATABASE_URL \
                             -Dspring.datasource.username=$DATABASE_USERNAME \
@@ -157,7 +162,6 @@ pipeline {
 
             sh '''
               export IMAGE_TAG=''' + imageTag + '''
-              echo "Deploying to namespace: $IMAGE_TAG"
               rm -rf /var/lock
               # Get the ECR login password
               export ECR_LOGIN=$(aws ecr get-login-password --region $AWS_REGION)
@@ -169,11 +173,46 @@ pipeline {
               echo "{\"auths\":{\"924809052459.dkr.ecr.us-east-1.amazonaws.com\":{\"auth\":\"$(echo -n AWS:$ECR_LOGIN | base64)\"}}}" > /kaniko/.docker/config.json
                 echo ${imageTag}
               # Build and push the Docker image with the determined tag
-              /kaniko/executor --dockerfile=Dockerfile.prod --context=dir://. --destination=924809052459.dkr.ecr.us-east-1.amazonaws.com/user-service:${IMAGE_TAG}
+              /kaniko/executor --dockerfile=Dockerfile.prod --context=dir://. --destination=924809052459.dkr.ecr.us-east-1.amazonaws.com/${SERVICE_NAME}-service:${IMAGE_TAG}
             '''
           }
         }
       }
+    }
+
+    // after this stage, the operative app is deployed to the test EKS cluster
+    // and should be ready for testing on the test eks
+    
+    stage('Deploy to Test EKS') {
+    when {
+        branch 'testing-cohort'
+    }
+    
+    steps {
+        container('aws-kubectl') {
+            withCredentials([
+                  string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USERNAME'),
+                  string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
+            {
+            sh '''
+            aws eks --region us-east-1 update-kubeconfig --name project3-eks
+
+            # deploy service
+
+            cd Budget-Buddy-Kubernetes/Deployments/Services
+            # set test image
+            sed -i "s/<image-version>/test-latest/" deployment-${SERVICE_NAME}-service.yaml
+            # set test DB url
+            # note use of | as delimiter because of forward slashes in the url
+            sed -i 's|<db-url>|jdbc:****ql://${SERVICE_NAME}-postgres.${NAMESPACE}.svc.cluster.local:5432/my_budget_buddy/|' deployment-${SERVICE_NAME}-service.yaml
+
+            # reapply
+
+            kubectl delete -f ./deployment-${SERVICE_NAME}-service.yaml --namespace=${NAMESPACE} || true 
+            kubectl apply -f ./deployment-${SERVICE_NAME}-service.yaml --namespace=${NAMESPACE}
+            '''
+            }
+        }
     }
     
     // add functional, performance tests
