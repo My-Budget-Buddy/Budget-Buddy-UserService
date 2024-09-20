@@ -1,4 +1,4 @@
-FROM 924809052459.dkr.ecr.us-east-1.amazonaws.com/alpine:latest
+FROM alpine:latest
   
   RUN apk update && apk upgrade && apk add openjdk17-jre
   
