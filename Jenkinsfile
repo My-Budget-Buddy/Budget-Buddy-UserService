@@ -122,15 +122,15 @@ pipeline {
         steps {
             container('maven') {
                 withCredentials([
-                  string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USERNAME'),
-                  string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
+                  string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USER'),
+                  string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASS')])
                 {
                     sh '''
                         export DATABASE_URL=jdbc:postgresql://${SERVICE_NAME}-postgres.${NAMESPACE}.svc.cluster.local:5432/my_budget_buddy
                         mvn clean verify -Pcoverage -Dspring.profiles.active=test \
                             -Dspring.datasource.url=$DATABASE_URL \
-                            -Dspring.datasource.username=$DATABASE_USERNAME \
-                            -Dspring.datasource.password=$DATABASE_PASSWORD
+                            -Dspring.datasource.username=$DATABASE_USER \
+                            -Dspring.datasource.password=$DATABASE_PASS
                     '''
                     withSonarQubeEnv('SonarCloud') {
                         sh '''
