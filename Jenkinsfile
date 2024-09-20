@@ -172,7 +172,7 @@ pipeline {
               mkdir -p /kaniko/.docker
               echo "{\"auths\":{\"924809052459.dkr.ecr.us-east-1.amazonaws.com\":{\"auth\":\"$(echo -n AWS:$ECR_LOGIN | base64)\"}}}" > /kaniko/.docker/config.json
                 echo ${imageTag}
-              # Build and push the Docker image with the determined tag
+                
               /kaniko/executor --dockerfile=Dockerfile.prod --context=dir://. --destination=924809052459.dkr.ecr.us-east-1.amazonaws.com/${SERVICE_NAME}-service:${IMAGE_TAG}
             '''
           }
