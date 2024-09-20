@@ -71,8 +71,8 @@ pipeline {
   environment {
     SERVICE_NAME = 'user'
     PASCAL_SERVICE_NAME = 'UserService'
-    NAMESPACE = 'user-test'
-    EUREKA_URL = 'http://discovery-service.user-test.svc.cluster.local:8761/eureka'
+    NAMESPACE = 'staging'
+    EUREKA_URL = 'http://discovery-service.staging.svc.cluster.local:8761/eureka'
     GITHUB_TOKEN = credentials('getBuddy_Github_App')
     REVIEWER_GITHUB_USERNAME = 'brittshook'
   }
@@ -109,7 +109,7 @@ pipeline {
 
                 cd Budget-Buddy-Kubernetes/Databases
                 chmod +x ./deploy-database.sh
-                ./deploy-database.sh ${NAMESPACE} ${SERVICE_NAME} $DATABASE_USERNAME $DATABASE_PASSWORD
+                ./deploy-database.sh ${NAMESPACE} $DATABASE_USERNAME $DATABASE_PASSWORD
 
                 '''
                 }
@@ -129,7 +129,7 @@ pipeline {
                   string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASS')])
                 {
             sh '''
-                        export DATABASE_URL=jdbc:postgresql://${SERVICE_NAME}-postgres.${NAMESPACE}.svc.cluster.local:5432/my_budget_buddy
+                        export DATABASE_URL=jdbc:postgresql://postgres.${NAMESPACE}.svc.cluster.local:5432/my_budget_buddy
                         mvn clean verify -Pcoverage -Dspring.profiles.active=test \
                             -Dspring.datasource.url=$DATABASE_URL \
                             -Dspring.datasource.username=$DATABASE_USER \
@@ -161,15 +161,15 @@ pipeline {
                   string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USER'),
                   string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASS')])
                 {
-            sh '''
-                        export DATABASE_URL=jdbc:postgresql://${SERVICE_NAME}-postgres.${NAMESPACE}.svc.cluster.local:5432/my_budget_buddy
-                        mvn clean verify -Pcoverage -Dspring.profiles.active=test \
-                            -Dspring.datasource.url=$DATABASE_URL \
-                            -Dspring.datasource.username=$DATABASE_USER \
-                            -Dspring.datasource.password=$DATABASE_PASS
-                    '''
-            withSonarQubeEnv('SonarCloud') {
-              sh '''
+                  sh '''
+                              export DATABASE_URL=jdbc:postgresql://postgres.${NAMESPACE}.svc.cluster.local:5432/my_budget_buddy
+                              mvn clean verify -Pcoverage -Dspring.profiles.active=test \
+                                  -Dspring.datasource.url=$DATABASE_URL \
+                                  -Dspring.datasource.username=$DATABASE_USER \
+                                  -Dspring.datasource.password=$DATABASE_PASS
+                          '''
+                  withSonarQubeEnv('SonarCloud') {
+                    sh '''
                             mvn sonar:sonar \
                                 -Dsonar.projectKey=My-Budget-Buddy_Budget-Buddy-UserService \
                                 -Dsonar.projectName=Budget-Buddy-UserService \
@@ -177,11 +177,11 @@ pipeline {
                                 -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
                                 -Dsonar.branch.name=testing-main
                         '''
-            }
+                  }
                 }
             }
         }
-        }
+      }
 
     stage('Build and Push Docker Image') {
       steps {
@@ -240,10 +240,11 @@ pipeline {
             sed -i "s/<image-version>/test-latest/" deployment-${SERVICE_NAME}-service.yaml
             # set test DB url
             # note use of | as delimiter because of forward slashes in the url
-            sed -i 's|<db-url>|jdbc:****ql://${SERVICE_NAME}-postgres.${NAMESPACE}.svc.cluster.local:5432/my_budget_buddy/|' deployment-${SERVICE_NAME}-service.yaml
+            sed -i 's|<db-url>|jdbc:psql://postgres.${NAMESPACE}.svc.cluster.local:5432/my_budget_buddy/|' deployment-${SERVICE_NAME}-service.yaml
 
             # reapply
 
+            # || true to prevent pipeline failure if service does not exist
             kubectl delete -f ./deployment-${SERVICE_NAME}-service.yaml --namespace=${NAMESPACE} || true
             kubectl apply -f ./deployment-${SERVICE_NAME}-service.yaml --namespace=${NAMESPACE}
             '''
