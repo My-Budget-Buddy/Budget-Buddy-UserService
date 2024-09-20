@@ -138,7 +138,9 @@ pipeline {
                                 -Dsonar.projectKey=My-Budget-Buddy_Budget-Buddy-BudgetService \
                                 -Dsonar.projectName=Budget-Buddy-BudgetService \
                                 -Dsonar.java.binaries=target/classes \
-                                -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                                -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+                                -Dsonar.branch.name = testing-cohort \
+                                -Dsonar.branch.target = main
                         '''
                     }
                 }
