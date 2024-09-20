@@ -84,16 +84,18 @@ pipeline {
                         # kubectl delete -f postgres-secret.yaml
                         # kubectl delete -f postgres-service.yaml
                         
-                        kubectl delete -f secret.yaml
-                        kubectl delete -f service-account.yaml
-                        kubectl delete -f service.yaml
-                        kubectl delete -f deployment.yaml
-                        sleep 10
+                        #kubectl delete -f secret.yaml
+                        #kubectl delete -f service-account.yaml
+                        #kubectl delete -f service.yaml
+                        #kubectl delete -f deployment.yaml
+                        #sleep 10
                         
-                        kubectl apply -f secret.yaml
-                        kubectl apply -f service-account.yaml
-                        kubectl apply -f service.yaml
-                        kubectl apply -f deployment.yaml
+                        #kubectl apply -f secret.yaml
+                        #kubectl apply -f service-account.yaml
+                        #kubectl apply -f service.yaml
+                        #kubectl apply -f deployment.yaml
+
+                        kubectl apply -f ./
                         
                         sleep 10
                     
