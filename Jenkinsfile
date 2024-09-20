@@ -136,10 +136,11 @@ pipeline {
                     withSonarQubeEnv('SonarCloud') {
                         sh '''
                             mvn sonar:sonar \
-                                -Dsonar.projectKey=My-Budget-Buddy_Budget-Buddy-BudgetService \
-                                -Dsonar.projectName=Budget-Buddy-BudgetService \
+                                -Dsonar.projectKey=My-Budget-Buddy_Budget-Buddy-UserService \
+                                -Dsonar.projectName=Budget-Buddy-UserService \
                                 -Dsonar.java.binaries=target/classes \
-                                -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                                -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+                                -Dsonar.branch.name=testing-cohort
                         '''
                     }
                 }
