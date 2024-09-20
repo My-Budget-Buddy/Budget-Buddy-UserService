@@ -71,6 +71,7 @@ pipeline {
   environment {
     SERVICE_NAME = 'user'
     NAMESPACE = 'user-test'
+    EUREKA_URL = 'http://discovery-service.user-test.svc.cluster.local:8761/eureka'
   }
 
   stages {
