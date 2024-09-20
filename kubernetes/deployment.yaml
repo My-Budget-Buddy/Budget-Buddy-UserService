@@ -27,13 +27,13 @@ spec:
           env:
             - name: DATABASE_URL
               value: jdbc:postgresql://db:5432/my_budget_buddy
-            - name: DATABASE_USER
+            - name: DATABASE_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
-                  key: POSTGRES_USER
+                  key: DATABASE_USERNAME
             - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
-                  key: POSTGRES_PASSWORD
+                  key: DATABASE_PASSWORD
