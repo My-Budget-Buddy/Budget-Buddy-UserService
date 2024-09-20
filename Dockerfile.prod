@@ -1,4 +1,4 @@
-FROM maven:3.8-openjdk-17 AS build
+FROM 924809052459.dkr.ecr.us-east-1.amazonaws.com/maven:3.8-openjdk-17 AS build
 
 WORKDIR /app
 
@@ -6,7 +6,7 @@ COPY . /app
 
 RUN mvn clean package -DskipTests
 
-FROM alpine:latest
+FROM 924809052459.dkr.ecr.us-east-1.amazonaws.com/alpine:latest
 
 RUN apk add --no-cache openjdk17-jre
 
