@@ -70,12 +70,14 @@ pipeline {
 
   environment {
     SERVICE_NAME = 'user'
+    PASCAL_SERVICE_NAME = 'UserService'
     NAMESPACE = 'user-test'
     EUREKA_URL = 'http://discovery-service.user-test.svc.cluster.local:8761/eureka'
+    GITHUB_TOKEN = credentials('getBuddy_Github_App')
+    REVIEWER_GITHUB_USERNAME = 'brittshook'
   }
 
   stages {
-    
     stage('Build for Staging') {
         when {
             branch 'testing-cohort'
@@ -83,38 +85,38 @@ pipeline {
 
         steps {
             container('maven') {
-                sh 'mvn clean install -DskipTests=true -Dspring.profiles.active=build'
+          sh 'mvn clean install -DskipTests=true -Dspring.profiles.active=build'
             }
         }
     }
-    
+
     stage('Set Up EKS Test Database') {
         when {
             branch 'testing-cohort'
         }
-        
+
         steps {
             sh 'git clone https://github.com/My-Budget-Buddy/Budget-Buddy-Kubernetes.git'
             container('aws-kubectl') {
-                withCredentials([
+          withCredentials([
                       string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USERNAME'),
                       string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
                 {
                 sh '''
                 aws eks --region us-east-1 update-kubeconfig --name project3-eks
-                
+
                 # deploy test db
 
                 cd Budget-Buddy-Kubernetes/Databases
                 chmod +x ./deploy-database.sh
                 ./deploy-database.sh ${NAMESPACE} ${SERVICE_NAME} $DATABASE_USERNAME $DATABASE_PASSWORD
-                
+
                 '''
                 }
             }
         }
     }
-    
+
     stage('Test and Analyze for Staging') {
         when {
             branch 'testing-cohort'
@@ -122,19 +124,19 @@ pipeline {
 
         steps {
             container('maven') {
-                withCredentials([
+          withCredentials([
                   string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USER'),
                   string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASS')])
                 {
-                    sh '''
+            sh '''
                         export DATABASE_URL=jdbc:postgresql://${SERVICE_NAME}-postgres.${NAMESPACE}.svc.cluster.local:5432/my_budget_buddy
                         mvn clean verify -Pcoverage -Dspring.profiles.active=test \
                             -Dspring.datasource.url=$DATABASE_URL \
                             -Dspring.datasource.username=$DATABASE_USER \
                             -Dspring.datasource.password=$DATABASE_PASS
                     '''
-                    withSonarQubeEnv('SonarCloud') {
-                        sh '''
+            withSonarQubeEnv('SonarCloud') {
+              sh '''
                             mvn sonar:sonar \
                                 -Dsonar.projectKey=My-Budget-Buddy_Budget-Buddy-UserService \
                                 -Dsonar.projectName=Budget-Buddy-UserService \
@@ -142,7 +144,7 @@ pipeline {
                                 -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
                                 -Dsonar.branch.name=testing-cohort
                         '''
-                    }
+            }
                 }
             }
         }
@@ -155,19 +157,19 @@ pipeline {
 
         steps {
             container('maven') {
-                withCredentials([
+          withCredentials([
                   string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USER'),
                   string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASS')])
                 {
-                    sh '''
+            sh '''
                         export DATABASE_URL=jdbc:postgresql://${SERVICE_NAME}-postgres.${NAMESPACE}.svc.cluster.local:5432/my_budget_buddy
                         mvn clean verify -Pcoverage -Dspring.profiles.active=test \
                             -Dspring.datasource.url=$DATABASE_URL \
                             -Dspring.datasource.username=$DATABASE_USER \
                             -Dspring.datasource.password=$DATABASE_PASS
                     '''
-                    withSonarQubeEnv('SonarCloud') {
-                        sh '''
+            withSonarQubeEnv('SonarCloud') {
+              sh '''
                             mvn sonar:sonar \
                                 -Dsonar.projectKey=My-Budget-Buddy_Budget-Buddy-UserService \
                                 -Dsonar.projectName=Budget-Buddy-UserService \
@@ -175,18 +177,18 @@ pipeline {
                                 -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
                                 -Dsonar.branch.name=testing-main
                         '''
-                    }
+            }
                 }
             }
         }
-    }
-    
+        }
+
     stage('Build and Push Docker Image') {
       steps {
         container('kaniko') {
           script {
             def imageTag = 'latest'
-            
+
             // Determine the image tag based on the branch
             // note that the var must nonetheless be exported in the operative shell command
             if (BRANCH_NAME == 'testing-cohort') {
@@ -207,7 +209,7 @@ pipeline {
               mkdir -p /kaniko/.docker
               echo "{\"auths\":{\"924809052459.dkr.ecr.us-east-1.amazonaws.com\":{\"auth\":\"$(echo -n AWS:$ECR_LOGIN | base64)\"}}}" > /kaniko/.docker/config.json
                 echo ${imageTag}
-                
+
               /kaniko/executor --dockerfile=Dockerfile.prod --context=dir://. --destination=924809052459.dkr.ecr.us-east-1.amazonaws.com/${SERVICE_NAME}-service:${IMAGE_TAG}
             '''
           }
@@ -218,11 +220,11 @@ pipeline {
     // after this stage, the operative app is deployed to the test EKS cluster
     // and should be ready for testing on the test eks
     stage('Deploy to Test EKS') {
-    when {
+      when {
         branch 'testing-cohort'
-    }
-    
-    steps {
+      }
+
+      steps {
         container('aws-kubectl') {
             withCredentials([
                   string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USERNAME'),
@@ -242,7 +244,7 @@ pipeline {
 
             # reapply
 
-            kubectl delete -f ./deployment-${SERVICE_NAME}-service.yaml --namespace=${NAMESPACE} || true 
+            kubectl delete -f ./deployment-${SERVICE_NAME}-service.yaml --namespace=${NAMESPACE} || true
             kubectl apply -f ./deployment-${SERVICE_NAME}-service.yaml --namespace=${NAMESPACE}
             '''
             }
@@ -250,12 +252,71 @@ pipeline {
       }
     }
   }
-  
+
   // add functional, performance tests
 
   post {
     always {
       cleanWs()
+    }
+
+    success {
+      script {
+        // Create the Pull Request
+        def apiUrl = "https://github.com/My-Budget-Buddy/Budget-Buddy-${PASCAL_SERVICE_NAME}/pulls"
+        def payload = '''
+                {
+                    "title": "Automated PR: Pipeline successful",
+                    "head": "testing-cohort",
+                    "base": "main",
+                    "body": "This pull request was created automatically after a successful pipeline run."
+                }
+                '''
+
+        def response = httpRequest(
+                    url: apiUrl,
+                    httpMode: 'POST',
+                    customHeaders: [[name: 'Authorization', value: "token ${GITHUB_TOKEN}"]],
+                    contentType: 'APPLICATION_JSON',
+                    requestBody: payload
+                )
+
+        // Extract PR number from the response
+        if (response.status == 200) {
+          def jsonResponse = readJSON text: response.content
+          def prNumber = jsonResponse.number
+
+          echo "PR #${prNumber} created."
+
+          // Request Reviewers for the Pull Request
+          def reviewerApiUrl = "https://github.com/My-Budget-Buddy/Budget-Buddy-${PASCAL_SERVICE_NAME}/pulls/${prNumber}/requested_reviewers"
+          def reviewerPayload = """
+                {
+                    "reviewers": ["${REVIEWER_GITHUB_USERNAME}"]
+                }
+                """
+
+          def reviewerResponse = httpRequest(
+                    url: reviewerApiUrl,
+                    httpMode: 'POST',
+                    customHeaders: [[name: 'Authorization', value: "token ${GITHUB_TOKEN}"]],
+                    contentType: 'APPLICATION_JSON',
+                    requestBody: reviewerPayload
+                )
+
+          if (reviewerResponse.status == 200) {
+              echo "Reviewers requested for PR #${prNumber}."
+          } else {
+              echo "Failed to request reviewers for PR #${prNumber}. Status: ${reviewerResponse.status}"
+          }
+        } else {
+              echo "Failed to create PR. Status: ${response.status}"
+        }
+      }
+    }
+
+    failure {
+      echo 'The pipeline failed. No pull request created.'
     }
   }
 }
