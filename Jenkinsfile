@@ -60,7 +60,7 @@ pipeline {
         }
     }
 
-    stage('Deploy Postgres') {
+    stage('Deploy to Staging EKS') {
         when {
             branch 'testing-cohort'
         }
@@ -77,15 +77,11 @@ pipeline {
                         cd kubernetes
                         sed -i "s/<postgres-user>/$DATABASE_USERNAME/" postgres-secret.yaml
                         sed -i "s/<postgres-password>/$DATABASE_PASSWORD/" postgres-secret.yaml
-                        kubectl delete -f initdb-configmap.yaml
-                        kubectl delete -f postgres-deployment.yaml
-                        kubectl delete -f postgres-service.yaml
-                        kubectl delete -f postgres-secret.yaml
-                        kubectl apply -f initdb-configmap.yaml
-                        kubectl apply -f postgres-secret.yaml
-                        kubectl apply -f postgres-service.yaml
-                        kubectl apply -f postgres-deployment.yaml
-                        kubectl describe pods
+                        sed -i "s/<postgres-user>/$DATABASE_USERNAME/" secret.yaml
+                        sed -i "s/<postgres-password>/$DATABASE_PASSWORD/" secret.yaml
+                        kubectl delete -f ./
+                        sleep 5
+                        kubectl apply -f ./
                     '''
                     }
                 }
