@@ -73,7 +73,7 @@ pipeline {
     }
 
     environment {
-        SERVICE_NAME = 'user'
+        SERVICE_NAME = 'user-service'
         PASCAL_SERVICE_NAME = 'UserService'
         STAGING_DATABASE_URL = 'jdbc:postgresql://postgres:5432/my_budget_buddy'
         PROD_DATABASE_URL = 'jdbc:postgresql://budgetbuddy-0.c4eqo06kg56i.us-east-1.rds.amazonaws.com/budgetbuddy'
@@ -162,7 +162,7 @@ pipeline {
                         sh '''
                             export DATABASE_URL=${STAGING_DATABASE_URL}
                             mvn clean verify -Pcoverage -Dspring.profiles.active=test \
-                                -Dspring.datasource.url=$DATABASE_URL \
+                                -Dspring.datasource.url=jdbc:postgresql://postgres.staging.svc.cluster.local:5432/my_budget_buddy \
                                 -Dspring.datasource.username=$DATABASE_USER \
                                 -Dspring.datasource.password=$DATABASE_PASS
                         '''
@@ -307,7 +307,7 @@ pipeline {
                           sh '''
                               ls
                               cd Budget-Buddy-Frontend-Testing/cucumber-selenium-tests
-                              mvn test -Dheadless=true -Dcucumber.publish.token=${CUCUMBER_TOKEN} -DfrontendUrl=https://frontend.skillstorm-congo.com
+                              # mvn test -Dheadless=true -Dcucumber.publish.token=${CUCUMBER_TOKEN} -DfrontendUrl=https://staging.frontend.skillstorm-congo.com
                           '''
                       }
                   }
@@ -572,6 +572,7 @@ def revertPullRequest(prNumber, prNodeId, prTitle, GITHUB_TOKEN) {
         """
     )
 }
+
 // Function to handle the revert response
 def handleRevertResponse(revertResponse, prNumber, prAuthor, GITHUB_TOKEN) {
     if (revertResponse.status == 400) {
