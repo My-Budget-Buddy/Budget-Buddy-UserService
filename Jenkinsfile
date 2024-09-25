@@ -315,6 +315,8 @@ pipeline {
           }
       }
 
+    // add performance tests
+
     // Deploy the service to EKS for production
     stage('Deploy to EKS for Production') {
         when {
@@ -350,9 +352,6 @@ pipeline {
         }
     }
 }
-    
-  
-  // add functional, performance tests
 
   post {
     always {
