@@ -2,318 +2,314 @@ pipeline {
   agent {
     kubernetes {
       yaml '''
-            apiVersion: v1
-            kind: Pod
-            spec:
-              containers:
-              - name: maven
-                image: 924809052459.dkr.ecr.us-east-1.amazonaws.com/maven:latest
-                command:
-                - "sleep"
-                args:
-                - "9999999"
-              - name: aws-kubectl
-                image: 924809052459.dkr.ecr.us-east-1.amazonaws.com/aws-kubectl:latest
-                env:
-                - name: AWS_REGION
-                  valueFrom:
-                    secretKeyRef:
-                      name: ecr-login
-                      key: AWS_REGION
-                - name: AWS_ACCESS_KEY_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: ecr-login
-                      key: AWS_ACCESS_KEY_ID
-                - name: AWS_SECRET_ACCESS_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: ecr-login
-                      key: AWS_SECRET_ACCESS_KEY
-                command:
-                - "sleep"
-                args:
-                - "9999999"
-              - name: kaniko
-                image: 924809052459.dkr.ecr.us-east-1.amazonaws.com/kaniko:latest
-                imagePullPolicy: Always
-                volumeMounts:
-                - name: kaniko-cache
-                  mountPath: /kaniko/.cache
-                env:
-                - name: AWS_REGION
-                  valueFrom:
-                    secretKeyRef:
-                      name: ecr-login
-                      key: AWS_REGION
-                - name: AWS_ACCESS_KEY_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: ecr-login
-                      key: AWS_ACCESS_KEY_ID
-                - name: AWS_SECRET_ACCESS_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: ecr-login
-                      key: AWS_SECRET_ACCESS_KEY
-                command:
-                - sleep
-                args:
-                - '9999999'
-                tty: true
-              volumes:
+          apiVersion: v1
+          kind: Pod
+          spec:
+            containers:
+            - name: maven
+              image: 924809052459.dkr.ecr.us-east-1.amazonaws.com/maven:latest
+              command:
+              - "sleep"
+              args:
+              - "9999999"
+            - name: aws-kubectl
+              image: 924809052459.dkr.ecr.us-east-1.amazonaws.com/aws-kubectl:latest
+              env:
+              - name: AWS_REGION
+                valueFrom:
+                  secretKeyRef:
+                    name: ecr-login
+                    key: AWS_REGION
+              - name: AWS_ACCESS_KEY_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: ecr-login
+                    key: AWS_ACCESS_KEY_ID
+              - name: AWS_SECRET_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: ecr-login
+                    key: AWS_SECRET_ACCESS_KEY
+              command:
+              - "sleep"
+              args:
+              - "9999999"
+            - name: kaniko
+              image: 924809052459.dkr.ecr.us-east-1.amazonaws.com/kaniko:latest
+              imagePullPolicy: Always
+              volumeMounts:
               - name: kaniko-cache
-                emptyDir: {}
-        '''
+                mountPath: /kaniko/.cache
+              env:
+              - name: AWS_REGION
+                valueFrom:
+                  secretKeyRef:
+                    name: ecr-login
+                    key: AWS_REGION
+              - name: AWS_ACCESS_KEY_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: ecr-login
+                    key: AWS_ACCESS_KEY_ID
+              - name: AWS_SECRET_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: ecr-login
+                    key: AWS_SECRET_ACCESS_KEY
+              command:
+              - sleep
+              args:
+              - '9999999'
+              tty: true
+            volumes:
+            - name: kaniko-cache
+              emptyDir: {}
+      '''
+    }
+  }
+
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30'))
+  }
+
+  environment {
+      SERVICE_NAME = 'user-service'
+      PASCAL_SERVICE_NAME = 'UserService'
+      STAGING_DATABASE_URL = 'jdbc:postgresql://postgres:5432/my_budget_buddy'
+      PROD_DATABASE_URL = 'jdbc:postgresql://budgetbuddy-0.c4eqo06kg56i.us-east-1.rds.amazonaws.com/budgetbuddy'
+      CLIENT_ID = credentials('GITHUB_APP_CLIENT_ID')
+      PEM = credentials('GITHUB_APP_PEM')
+      REVIEWER_GITHUB_USERNAMES = '"britshook"'
+      TEST_BRANCH = 'testing-cohort'
+      MAIN_BRANCH = 'testing-main'
+  }
+
+  stages {
+      // Set namespace
+      stage('Set Namespace') {
+          steps {
+              script {
+                  if (env.BRANCH_NAME == "${TEST_BRANCH}") {
+                      env.NAMESPACE = 'staging'
+                  } else if (env.BRANCH_NAME == "${MAIN_BRANCH}") {
+                      env.NAMESPACE = 'prod'
+                  }
+              }
+          }
       }
-    }
 
-    options {
-      buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30'))
-    }
+      // Pull all git dependencies
+      stage('Pull Dependencies'){
+          steps{
+            sh '''
+            git clone https://github.com/My-Budget-Buddy/Budget-Buddy-Kubernetes.git
+            git clone -b daniel413x/pipeline https://github.com/My-Budget-Buddy/Budget-Buddy-Frontend-Testing.git
+            '''
+          }
+      }
 
-    environment {
-        SERVICE_NAME = 'user-service'
-        PASCAL_SERVICE_NAME = 'UserService'
-        STAGING_DATABASE_URL = 'jdbc:postgresql://postgres:5432/my_budget_buddy'
-        PROD_DATABASE_URL = 'jdbc:postgresql://budgetbuddy-0.c4eqo06kg56i.us-east-1.rds.amazonaws.com/budgetbuddy'
-        CLIENT_ID = credentials('GITHUB_APP_CLIENT_ID')
-        PEM = credentials('GITHUB_APP_PEM')
-        REVIEWER_GITHUB_USERNAMES = '"britshook"'
-        TEST_BRANCH = 'testing-cohort'
-        MAIN_BRANCH = 'testing-main'
-    }
+      // Build the project
+      stage('Build') {
 
-    stages {
-        // Set namespace
-        stage('Set Namespace') {
-            steps {
-                script {
-                    if (env.BRANCH_NAME == "${TEST_BRANCH}") {
-                        env.NAMESPACE = 'staging'
-                    } else if (env.BRANCH_NAME == "${MAIN_BRANCH}") {
-                        env.NAMESPACE = 'prod'
-                    }
-                }
-            }
-        }
-
-        // Pull all git dependencies
-        stage('Pull Dependencies'){
-            steps{
-              sh '''
-              git clone https://github.com/My-Budget-Buddy/Budget-Buddy-Kubernetes.git
-              git clone -b daniel413x/pipeline https://github.com/My-Budget-Buddy/Budget-Buddy-Frontend-Testing.git
-              '''
-            }
-        }
-
-        // Build the project
-        stage('Build') {
-            when {
-                branch 'testing-cohort'
-            }
-
-            steps {
-                container('maven') {
-                    sh 'mvn clean install -DskipTests=true -Dspring.profiles.active=build'
-                }
-            }
-        }
-    
-        // Set up the database for the staging environment
-        stage('Set Up Database for Staging') {
-            when {
-                branch 'testing-cohort'
-            }
-
-            steps {
-                container('aws-kubectl') {
-                    withCredentials([
-                            string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USERNAME'),
-                            string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
-                    {
-                    sh '''
-                    aws eks --region us-east-1 update-kubeconfig --name project3-eks
-                    
-                    # deploy staging db
-
-                    cd Budget-Buddy-Kubernetes/Databases
-                    chmod +x ./deploy-database.sh
-                    ./deploy-database.sh ${NAMESPACE} $DATABASE_USERNAME $DATABASE_PASSWORD
-                    '''
-                    }
-                }
-            }
-        }
-    
-        // Run coverage and analysis for the staging environment
-        stage('Test and Analyze for Staging') {
-            when {
-                branch 'testing-cohort'
-            }
-
-            steps {
-                container('maven') {
-                    withCredentials([
-                    string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USER'),
-                    string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASS')])
-                    {
-                        sh '''
-                            export DATABASE_URL=${STAGING_DATABASE_URL}
-                            mvn clean verify -Pcoverage -Dspring.profiles.active=test \
-                                -Dspring.datasource.url=jdbc:postgresql://postgres.staging.svc.cluster.local:5432/my_budget_buddy \
-                                -Dspring.datasource.username=$DATABASE_USER \
-                                -Dspring.datasource.password=$DATABASE_PASS
-                        '''
-                        withSonarQubeEnv('SonarCloud') {
-                            sh """
-                                mvn sonar:sonar \
-                                    -Dsonar.projectKey=My-Budget-Buddy_Budget-Buddy-${PASCAL_SERVICE_NAME} \
-                                    -Dsonar.projectName=Budget-Buddy-${PASCAL_SERVICE_NAME} \
-                                    -Dsonar.java.binaries=target/classes \
-                                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-                                    -Dsonar.branch.name=testing-cohort
-                            """
-                        }
-                    }
-                }
-            }
-        }
-    
-        // Build and push the docker image to ECR
-        stage('Build and Push Docker Image') {
-            steps {
-                container('kaniko') {
-                    script {
-                        def imageTag = 'latest'
-                        
-                        // Determine the image tag based on the branch
-                        // note that the var must nonetheless be exported in the operative shell command
-                        if (BRANCH_NAME == 'testing-cohort') {
-                        imageTag = 'test-latest'
-                        } else if (env.BRANCH_NAME == 'main') {
-                        imageTag = 'latest'
-                        }
-
-                        sh '''
-                        export IMAGE_TAG=''' + imageTag + '''
-                        rm -rf /var/lock
-                        # Get the ECR login password
-                        export ECR_LOGIN=$(aws ecr get-login-password --region $AWS_REGION)
-                        if [ -z "$ECR_LOGIN" ]; then
-                            echo "Failed to get ECR login password"
-                            exit 1
-                        fi
-                        mkdir -p /kaniko/.docker
-                        echo "{\"auths\":{\"924809052459.dkr.ecr.us-east-1.amazonaws.com\":{\"auth\":\"$(echo -n AWS:$ECR_LOGIN | base64)\"}}}" > /kaniko/.docker/config.json
-                            echo ${imageTag}
-                            
-                        /kaniko/executor --dockerfile=Dockerfile.prod --context=dir://. --destination=924809052459.dkr.ecr.us-east-1.amazonaws.com/${SERVICE_NAME}:${IMAGE_TAG}
-                        '''
-                    }
-                }
-            }
-        }
-
-        // Deploy the service to EKS for staging
-        stage('Deploy to EKS for Staging') {
-            when {
-                branch 'testing-cohort'
-            }
-
-            steps {
-                container('aws-kubectl') {
-                    withCredentials([
-                        string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USERNAME'),
-                        string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
-                    {
-                        sh '''
-                        aws eks --region us-east-1 update-kubeconfig --name project3-eks
-
-                        # deploy service
-
-                        cd Budget-Buddy-Kubernetes/Deployments/Services
-                        # set test image
-                        sed -i "s/test-latest/test-latest/" deployment-${SERVICE_NAME}.yaml
-                        # set test DB url
-                        # note use of | as delimiter because of forward slashes in the url
-                        sed -i 's|<database-url>|${STAGING_DATABASE_URL}|' deployment-${SERVICE_NAME}.yaml
-
-                        # reapply
-
-                        kubectl delete -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE} || true 
-                        kubectl apply -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE}
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Selenium/Cucumber Tests'){
+          steps {
+              container('maven') {
+                  sh 'mvn clean install -DskipTests=true -Dspring.profiles.active=build'
+              }
+          }
+      }
+  
+      // Set up the database for the staging environment
+      stage('Set Up Database for Staging') {
           when {
               branch 'testing-cohort'
           }
 
           steps {
-              script {
-                  // require that all services are responsive
-                  sh '''#!/bin/bash
-                  bash -c '
-                  TRIES_REMAINING=16
+              container('aws-kubectl') {
+                  withCredentials([
+                          string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USERNAME'),
+                          string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
+                  {
+                  sh '''
+                  aws eks --region us-east-1 update-kubeconfig --name project3-eks
+                  
+                  # deploy staging db
 
-                  SERVICES=(
-                      "https://api.skillstorm-congo.com/users"
-                      "https://api.skillstorm-congo.com/taxes"
-                      "https://api.skillstorm-congo.com/auth"
-                      "https://api.skillstorm-congo.com/transactions"
-                      "https://api.skillstorm-congo.com/accounts"
-                      "https://api.skillstorm-congo.com/budgets"
-                      "https://api.skillstorm-congo.com/buckets"
-                      "https://api.skillstorm-congo.com/summarys"
-                      "https://api.skillstorm-congo.com/api/credit"
-                  )
-
-                  # Function to check a single service, ignoring the status code
-                  check_service() {
-                      local service_url=$1
-                      echo "Waiting for $service_url to be ready..."
-                      local tries_remaining=$TRIES_REMAINING
-
-                      while [ $tries_remaining -gt 0 ]; do
-                          # Check if the service responds (ignoring the HTTP status code)
-                          if curl --silent --output /dev/null "$service_url"; then
-                              echo "***$service_url is ready***"
-                              return 0
-                          fi
-                          
-                          echo "waiting for $service_url..."
-                          tries_remaining=$((tries_remaining - 1))
-                          sleep 5
-                      done
-
-                      echo "$service_url did not start within expected time."
-                      exit 1
-                  }
-
-                  for service in "${SERVICES[@]}"; do
-                      check_service "$service"
-                  done
-                  '
+                  cd Budget-Buddy-Kubernetes/Databases
+                  chmod +x ./deploy-database.sh
+                  ./deploy-database.sh ${NAMESPACE} $DATABASE_USERNAME $DATABASE_PASSWORD
                   '''
+                  }
+              }
+          }
+      }
+  
+      // Run coverage and analysis for the staging environment
+      stage('Test and Analyze for Staging') {
+          when {
+              branch 'testing-cohort'
+          }
 
-                  container('maven'){
-                      withCredentials([string(credentialsId: 'CUCUMBER_TOKEN', variable: 'CUCUMBER_TOKEN')]) {
-                          sh '''
-                              ls
-                              cd Budget-Buddy-Frontend-Testing/cucumber-selenium-tests
-                              # mvn test -Dheadless=true -Dcucumber.publish.token=${CUCUMBER_TOKEN} -DfrontendUrl=https://staging.frontend.skillstorm-congo.com
-                          '''
+          steps {
+              container('maven') {
+                  withCredentials([
+                  string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USER'),
+                  string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASS')])
+                  {
+                      sh '''
+                          export DATABASE_URL=${STAGING_DATABASE_URL}
+                          mvn clean verify -Pcoverage -Dspring.profiles.active=test \
+                              -Dspring.datasource.url=jdbc:postgresql://postgres.staging.svc.cluster.local:5432/my_budget_buddy \
+                              -Dspring.datasource.username=$DATABASE_USER \
+                              -Dspring.datasource.password=$DATABASE_PASS
+                      '''
+                      withSonarQubeEnv('SonarCloud') {
+                          sh """
+                              mvn sonar:sonar \
+                                  -Dsonar.projectKey=My-Budget-Buddy_Budget-Buddy-${PASCAL_SERVICE_NAME} \
+                                  -Dsonar.projectName=Budget-Buddy-${PASCAL_SERVICE_NAME} \
+                                  -Dsonar.java.binaries=target/classes \
+                                  -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+                                  -Dsonar.branch.name=testing-cohort
+                          """
                       }
                   }
               }
           }
       }
+  
+      // Build and push the docker image to ECR
+      stage('Build and Push Docker Image') {
+          steps {
+              container('kaniko') {
+                  script {
+                      def imageTag = 'latest'
+                      
+                      // Determine the image tag based on the branch
+                      // note that the var must nonetheless be exported in the operative shell command
+                      if (BRANCH_NAME == 'testing-cohort') {
+                      imageTag = 'test-latest'
+                      } else if (env.BRANCH_NAME == 'main') {
+                      imageTag = 'latest'
+                      }
+
+                      sh '''
+                      export IMAGE_TAG=''' + imageTag + '''
+                      rm -rf /var/lock
+                      # Get the ECR login password
+                      export ECR_LOGIN=$(aws ecr get-login-password --region $AWS_REGION)
+                      if [ -z "$ECR_LOGIN" ]; then
+                          echo "Failed to get ECR login password"
+                          exit 1
+                      fi
+                      mkdir -p /kaniko/.docker
+                      echo "{\"auths\":{\"924809052459.dkr.ecr.us-east-1.amazonaws.com\":{\"auth\":\"$(echo -n AWS:$ECR_LOGIN | base64)\"}}}" > /kaniko/.docker/config.json
+                          echo ${imageTag}
+                          
+                      /kaniko/executor --dockerfile=Dockerfile.prod --context=dir://. --destination=924809052459.dkr.ecr.us-east-1.amazonaws.com/${SERVICE_NAME}:${IMAGE_TAG}
+                      '''
+                  }
+              }
+          }
+      }
+
+      // Deploy the service to EKS for staging
+      stage('Deploy to EKS for Staging') {
+          when {
+              branch 'testing-cohort'
+          }
+
+          steps {
+              container('aws-kubectl') {
+                  withCredentials([
+                      string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USERNAME'),
+                      string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
+                  {
+                      sh '''
+                      aws eks --region us-east-1 update-kubeconfig --name project3-eks
+
+                      # deploy service
+
+                      cd Budget-Buddy-Kubernetes/Deployments/Services
+                      # set test image
+                      sed -i "s/<image-tag>/test-latest/" deployment-${SERVICE_NAME}.yaml
+                      # set test DB url
+                      # note use of | as delimiter because of forward slashes in the url
+                      sed -i 's|<database-url>|${STAGING_DATABASE_URL}|' deployment-${SERVICE_NAME}.yaml
+
+                      # reapply
+
+                      kubectl delete -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE} || true 
+                      kubectl apply -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE}
+                      '''
+                  }
+              }
+          }
+      }
+
+      stage('Selenium/Cucumber Tests'){
+        when {
+            branch 'testing-cohort'
+        }
+
+        steps {
+            script {
+                // require that all services are responsive
+                sh '''#!/bin/bash
+                bash -c '
+                TRIES_REMAINING=16
+
+                SERVICES=(
+                    "https://api.skillstorm-congo.com/users"
+                    "https://api.skillstorm-congo.com/taxes"
+                    "https://api.skillstorm-congo.com/auth"
+                    "https://api.skillstorm-congo.com/transactions"
+                    "https://api.skillstorm-congo.com/accounts"
+                    "https://api.skillstorm-congo.com/budgets"
+                    "https://api.skillstorm-congo.com/buckets"
+                    "https://api.skillstorm-congo.com/summarys"
+                    "https://api.skillstorm-congo.com/api/credit"
+                )
+
+                # Function to check a single service, ignoring the status code
+                check_service() {
+                    local service_url=$1
+                    echo "Waiting for $service_url to be ready..."
+                    local tries_remaining=$TRIES_REMAINING
+
+                    while [ $tries_remaining -gt 0 ]; do
+                        # Check if the service responds (ignoring the HTTP status code)
+                        if curl --silent --output /dev/null "$service_url"; then
+                            echo "***$service_url is ready***"
+                            return 0
+                        fi
+                        
+                        echo "waiting for $service_url..."
+                        tries_remaining=$((tries_remaining - 1))
+                        sleep 5
+                    done
+
+                    echo "$service_url did not start within expected time."
+                    exit 1
+                }
+
+                for service in "${SERVICES[@]}"; do
+                    check_service "$service"
+                done
+                '
+                '''
+
+                container('maven'){
+                    withCredentials([string(credentialsId: 'CUCUMBER_TOKEN', variable: 'CUCUMBER_TOKEN')]) {
+                        sh '''
+                            cd Budget-Buddy-Frontend-Testing/cucumber-selenium-tests
+                            # mvn test -Dheadless=true -Dcucumber.publish.token=${CUCUMBER_TOKEN} -DfrontendUrl=https://staging.frontend.skillstorm-congo.com
+                        '''
+                    }
+                }
+            }
+        }
+    }
 
     // add performance tests
 
@@ -328,30 +324,30 @@ pipeline {
                 withCredentials([
                     string(credentialsId: 'PROD_DATABASE_USER', variable: 'DATABASE_USERNAME'),
                     string(credentialsId: 'PROD_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
-                {
-                    sh '''
-                    aws eks --region us-east-1 update-kubeconfig --name project3-eks
+                  {
+                      sh '''
+                      aws eks --region us-east-1 update-kubeconfig --name project3-eks
 
-                    # deploy service
+                      # deploy service
 
-                    cd Budget-Buddy-Kubernetes/Deployments/Services
-                    # set prod image
-                    sed -i "s/latest/latest/" deployment-${SERVICE_NAME}.yaml
+                      cd Budget-Buddy-Kubernetes/Deployments/Services
+                      # set prod image
+                      sed -i "s/<image-tag>/latest/" deployment-${SERVICE_NAME}.yaml
 
-                    # set prod DB url
-                    # note use of | as delimiter because of forward slashes in the url
-                    sed -i 's|<database-url>|${PROD_DATABASE_URL}|' deployment-${SERVICE_NAME}.yaml
+                      # set prod DB url
+                      # note use of | as delimiter because of forward slashes in the url
+                      sed -i 's|<database-url>|${PROD_DATABASE_URL}|' deployment-${SERVICE_NAME}.yaml
 
-                    # reapply
+                      # reapply
 
-                    kubectl delete -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE} || true 
-                    kubectl apply -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE}
-                    '''
-                }
-            }
-        }
-    }
-}
+                      kubectl delete -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE} || true 
+                      kubectl apply -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE}
+                      '''
+                  }
+              }
+          }
+      }
+  }
 
   post {
     always {
