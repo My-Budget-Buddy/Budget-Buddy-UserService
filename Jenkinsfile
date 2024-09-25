@@ -224,7 +224,7 @@ pipeline {
                       string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USERNAME'),
                       string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
                   {
-                      sh '''
+                      sh """
                       aws eks --region us-east-1 update-kubeconfig --name project3-eks
 
                       # deploy service
@@ -234,13 +234,11 @@ pipeline {
                       sed -i "s/<image-version>/test-latest/" deployment-${SERVICE_NAME}.yaml
                       # set test DB url
                       # note use of | as delimiter because of forward slashes in the url
-                      sed -i 's|<database-url>|$DATABASE_URL|' deployment-${SERVICE_NAME}.yaml
-
-                      # reapply
+                      sed -i 's|<database-url>|${DATABASE_URL}|' deployment-${SERVICE_NAME}.yaml
 
                       kubectl delete -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE} || true 
                       kubectl apply -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE}
-                      '''
+                      """
                   }
               }
           }
@@ -325,7 +323,7 @@ pipeline {
                     string(credentialsId: 'PROD_DATABASE_USER', variable: 'DATABASE_USERNAME'),
                     string(credentialsId: 'PROD_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
                   {
-                      sh '''
+                      sh """
                       aws eks --region us-east-1 update-kubeconfig --name project3-eks
 
                       # deploy service
@@ -336,13 +334,13 @@ pipeline {
 
                       # set prod DB url
                       # note use of | as delimiter because of forward slashes in the url
-                      sed -i 's|<database-url>|$DATABASE_URL|' deployment-${SERVICE_NAME}.yaml
+                      sed -i 's|<database-url>|${DATABASE_URL}|' deployment-${SERVICE_NAME}.yaml
 
                       # reapply
 
                       kubectl delete -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE} || true 
                       kubectl apply -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE}
-                      '''
+                      """
                   }
               }
           }
