@@ -77,7 +77,7 @@ pipeline {
       PASCAL_SERVICE_NAME = 'UserService'
       CLIENT_ID = credentials('GITHUB_APP_CLIENT_ID')
       PEM = credentials('GITHUB_APP_PEM')
-      REVIEWER_GITHUB_USERNAMES = '"brittshook"'
+      REVIEWER_GITHUB_USERNAMES = '"britshook"'
       TEST_BRANCH = 'testing-cohort'
       MAIN_BRANCH = 'testing-main'
   }
