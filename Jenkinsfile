@@ -151,9 +151,9 @@ pipeline {
           steps {
               container('maven') {
                   withCredentials([
-                    string(credentialsId: 'STAGING_DATABASE_URL', variable: 'DATABASE_URL'),
-                    string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USER'),
-                    string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASS')])
+                  string(credentialsId: 'STAGING_DATABASE_URL', variable: 'DATABASE_URL'),
+                  string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USER'),
+                  string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASS')])
                   {
                       sh '''
                           mvn clean verify -Pcoverage -Dspring.profiles.active=test \
