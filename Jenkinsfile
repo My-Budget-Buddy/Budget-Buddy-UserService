@@ -75,8 +75,6 @@ pipeline {
   environment {
       SERVICE_NAME = 'user-service'
       PASCAL_SERVICE_NAME = 'UserService'
-      STAGING_DATABASE_URL = 'jdbc:postgresql://postgres:5432/my_budget_buddy'
-      PROD_DATABASE_URL = 'jdbc:postgresql://budgetbuddy-0.c4eqo06kg56i.us-east-1.rds.amazonaws.com/budgetbuddy'
       CLIENT_ID = credentials('GITHUB_APP_CLIENT_ID')
       PEM = credentials('GITHUB_APP_PEM')
       REVIEWER_GITHUB_USERNAMES = '"britshook"'
@@ -157,7 +155,6 @@ pipeline {
                   string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASS')])
                   {
                       sh '''
-                          export DATABASE_URL=${STAGING_DATABASE_URL}
                           mvn clean verify -Pcoverage -Dspring.profiles.active=test \
                               -Dspring.datasource.url=jdbc:postgresql://postgres.staging.svc.cluster.local:5432/my_budget_buddy \
                               -Dspring.datasource.username=$DATABASE_USER \
@@ -222,10 +219,11 @@ pipeline {
           steps {
               container('aws-kubectl') {
                   withCredentials([
+                      string(credentialsId: 'STAGING_DATABASE_URL', variable: 'DATABASE_URL'),
                       string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USERNAME'),
                       string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
                   {
-                      sh '''
+                      sh """
                       aws eks --region us-east-1 update-kubeconfig --name project3-eks
 
                       # deploy service
@@ -235,13 +233,11 @@ pipeline {
                       sed -i "s/<image-version>/test-latest/" deployment-${SERVICE_NAME}.yaml
                       # set test DB url
                       # note use of | as delimiter because of forward slashes in the url
-                      sed -i 's|<database-url>|${STAGING_DATABASE_URL}|' deployment-${SERVICE_NAME}.yaml
-
-                      # reapply
+                      sed -i 's|<database-url>|${DATABASE_URL}|' deployment-${SERVICE_NAME}.yaml
 
                       kubectl delete -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE} || true 
                       kubectl apply -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE}
-                      '''
+                      """
                   }
               }
           }
@@ -322,10 +318,11 @@ pipeline {
         steps {
             container('aws-kubectl') {
                 withCredentials([
+                    string(credentialsId: 'PROD_DATABASE_URL', variable: 'DATABASE_URL'),
                     string(credentialsId: 'PROD_DATABASE_USER', variable: 'DATABASE_USERNAME'),
                     string(credentialsId: 'PROD_DATABASE_PASSWORD', variable: 'DATABASE_PASSWORD')])
                   {
-                      sh '''
+                      sh """
                       aws eks --region us-east-1 update-kubeconfig --name project3-eks
 
                       # deploy service
@@ -336,13 +333,13 @@ pipeline {
 
                       # set prod DB url
                       # note use of | as delimiter because of forward slashes in the url
-                      sed -i 's|<database-url>|${PROD_DATABASE_URL}|' deployment-${SERVICE_NAME}.yaml
+                      sed -i 's|<database-url>|${DATABASE_URL}|' deployment-${SERVICE_NAME}.yaml
 
                       # reapply
 
                       kubectl delete -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE} || true 
                       kubectl apply -f ./deployment-${SERVICE_NAME}.yaml --namespace=${NAMESPACE}
-                      '''
+                      """
                   }
               }
           }
