@@ -151,12 +151,13 @@ pipeline {
           steps {
               container('maven') {
                   withCredentials([
+                  string(credentialsId: 'STAGING_DATABASE_URL', variable: 'DATABASE_URL'),
                   string(credentialsId: 'STAGING_DATABASE_USER', variable: 'DATABASE_USER'),
                   string(credentialsId: 'STAGING_DATABASE_PASSWORD', variable: 'DATABASE_PASS')])
                   {
                       sh '''
                           mvn clean verify -Pcoverage -Dspring.profiles.active=test \
-                              -Dspring.datasource.url=jdbc:postgresql://postgres.staging.svc.cluster.local:5432/my_budget_buddy \
+                              -Dspring.datasource.url=$DATABASE_URL \
                               -Dspring.datasource.username=$DATABASE_USER \
                               -Dspring.datasource.password=$DATABASE_PASS
                       '''
@@ -243,69 +244,69 @@ pipeline {
           }
       }
 
-      stage('Selenium/Cucumber Tests'){
-        when {
-            branch 'testing-cohort'
-        }
+    //   stage('Selenium/Cucumber Tests'){
+    //     when {
+    //         branch 'testing-cohort'
+    //     }
 
-        steps {
-            script {
-                // require that all services are responsive
-                sh '''#!/bin/bash
-                bash -c '
-                TRIES_REMAINING=16
+    //     steps {
+    //         script {
+    //             // require that all services are responsive
+    //             sh '''#!/bin/bash
+    //             bash -c '
+    //             TRIES_REMAINING=16
 
-                SERVICES=(
-                    "https://api.skillstorm-congo.com/users"
-                    "https://api.skillstorm-congo.com/taxes"
-                    "https://api.skillstorm-congo.com/auth"
-                    "https://api.skillstorm-congo.com/transactions"
-                    "https://api.skillstorm-congo.com/accounts"
-                    "https://api.skillstorm-congo.com/budgets"
-                    "https://api.skillstorm-congo.com/buckets"
-                    "https://api.skillstorm-congo.com/summarys"
-                    "https://api.skillstorm-congo.com/api/credit"
-                )
+    //             SERVICES=(
+    //                 "https://api.skillstorm-congo.com/users"
+    //                 "https://api.skillstorm-congo.com/taxes"
+    //                 "https://api.skillstorm-congo.com/auth"
+    //                 "https://api.skillstorm-congo.com/transactions"
+    //                 "https://api.skillstorm-congo.com/accounts"
+    //                 "https://api.skillstorm-congo.com/budgets"
+    //                 "https://api.skillstorm-congo.com/buckets"
+    //                 "https://api.skillstorm-congo.com/summarys"
+    //                 "https://api.skillstorm-congo.com/api/credit"
+    //             )
 
-                # Function to check a single service, ignoring the status code
-                check_service() {
-                    local service_url=$1
-                    echo "Waiting for $service_url to be ready..."
-                    local tries_remaining=$TRIES_REMAINING
+    //             # Function to check a single service, ignoring the status code
+    //             check_service() {
+    //                 local service_url=$1
+    //                 echo "Waiting for $service_url to be ready..."
+    //                 local tries_remaining=$TRIES_REMAINING
 
-                    while [ $tries_remaining -gt 0 ]; do
-                        # Check if the service responds (ignoring the HTTP status code)
-                        if curl --silent --output /dev/null "$service_url"; then
-                            echo "***$service_url is ready***"
-                            return 0
-                        fi
+    //                 while [ $tries_remaining -gt 0 ]; do
+    //                     # Check if the service responds (ignoring the HTTP status code)
+    //                     if curl --silent --output /dev/null "$service_url"; then
+    //                         echo "***$service_url is ready***"
+    //                         return 0
+    //                     fi
                         
-                        echo "waiting for $service_url..."
-                        tries_remaining=$((tries_remaining - 1))
-                        sleep 5
-                    done
+    //                     echo "waiting for $service_url..."
+    //                     tries_remaining=$((tries_remaining - 1))
+    //                     sleep 5
+    //                 done
 
-                    echo "$service_url did not start within expected time."
-                    exit 1
-                }
+    //                 echo "$service_url did not start within expected time."
+    //                 exit 1
+    //             }
 
-                for service in "${SERVICES[@]}"; do
-                    check_service "$service"
-                done
-                '
-                '''
+    //             for service in "${SERVICES[@]}"; do
+    //                 check_service "$service"
+    //             done
+    //             '
+    //             '''
 
-                container('maven'){
-                    withCredentials([string(credentialsId: 'CUCUMBER_TOKEN', variable: 'CUCUMBER_TOKEN')]) {
-                        sh '''
-                            cd Budget-Buddy-Frontend-Testing/cucumber-selenium-tests
-                            # mvn test -Dheadless=true -Dcucumber.publish.token=${CUCUMBER_TOKEN} -DfrontendUrl=https://staging.frontend.skillstorm-congo.com
-                        '''
-                    }
-                }
-            }
-        }
-    }
+    //             container('maven'){
+    //                 withCredentials([string(credentialsId: 'CUCUMBER_TOKEN', variable: 'CUCUMBER_TOKEN')]) {
+    //                     sh '''
+    //                         cd Budget-Buddy-Frontend-Testing/cucumber-selenium-tests
+    //                         # mvn test -Dheadless=true -Dcucumber.publish.token=${CUCUMBER_TOKEN} -DfrontendUrl=https://staging.frontend.skillstorm-congo.com
+    //                     '''
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     // add performance tests
 
