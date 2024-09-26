@@ -267,7 +267,7 @@ pipeline {
         }
     }   
 
-      stage('Selenium/Cucumber Tests'){
+    stage('Selenium/Cucumber Tests'){
         when {
             branch 'testing-cohort'
         }
@@ -328,34 +328,6 @@ pipeline {
                     }
                 }
             }
-        }
-    }
-
-    stage('Performance Test Deployed App') {
-        when {
-            branch 'testing-cohort'
-        }
-
-        steps {
-            // wait for the service to be ready
-            sh '''
-                TRIES_REMAINING=16
-
-                echo 'Waiting for frontend to be ready...'
-                while ! curl --output /dev/null --silent https://api.skillstorm-congo.com/users; do
-                    TRIES_REMAINING=$((TRIES_REMAINING - 1))
-                    if [ $TRIES_REMAINING -le 0 ]; then
-                        echo "***$service_url is ready***"
-                        exit 1
-                    fi
-                done
-            '''
-            
-            sh '''
-            ls
-            cd Budget-Buddy-PerformanceTests
-            '''
-            bzt "stepping.yml"
         }
     }
 
