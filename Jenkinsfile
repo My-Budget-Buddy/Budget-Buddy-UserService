@@ -69,7 +69,7 @@ pipeline {
   }
 
   options {
-    buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30'))
+    buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '30'))
   }
 
   environment {
@@ -323,7 +323,7 @@ pipeline {
                     withCredentials([string(credentialsId: 'CUCUMBER_TOKEN', variable: 'CUCUMBER_TOKEN')]) {
                         sh '''
                             cd Budget-Buddy-Frontend-Testing/cucumber-selenium-tests
-                            # mvn test -Dheadless=true -Dcucumber.publish.token=${CUCUMBER_TOKEN} -DfrontendUrl=https://staging.frontend.skillstorm-congo.com -Dmaven.test.failure.ignore=true
+                            # mvn test -Dheadless=true -Dcucumber.publish.token=${CUCUMBER_TOKEN} -DfrontendUrl=https://staging.frontend.skillstorm-congo.com
                         '''
                     }
                 }
