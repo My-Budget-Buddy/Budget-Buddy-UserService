@@ -323,7 +323,7 @@ pipeline {
                     withCredentials([string(credentialsId: 'CUCUMBER_TOKEN', variable: 'CUCUMBER_TOKEN')]) {
                         sh '''
                             cd Budget-Buddy-Frontend-Testing/cucumber-selenium-tests
-                            # mvn test -Dheadless=true -Dcucumber.publish.token=${CUCUMBER_TOKEN} -DfrontendUrl=https://staging.frontend.skillstorm-congo.com
+                            mvn test -Dheadless=true -Dcucumber.publish.token=${CUCUMBER_TOKEN} -DfrontendUrl=https://staging.frontend.skillstorm-congo.com
                         '''
                     }
                 }
